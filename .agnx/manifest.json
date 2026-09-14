@@ -1,0 +1,48 @@
+{
+  "id": "music",
+  "name": "音乐",
+  "version": "0.1.7",
+  "engines": {
+    "agnx": ">=1.0.0"
+  },
+  "main": "./dist/index.js",
+  "contributes": {
+    "primarySegments": [
+      {
+        "id": "music",
+        "label": "音乐",
+        "order": 55,
+        "itemProvider": "music.tracks"
+      }
+    ],
+    "itemProviders": [
+      {
+        "id": "music.tracks"
+      }
+    ],
+    "commands": [
+      {
+        "id": "music.upload",
+        "title": "上传音乐"
+      },
+      {
+        "id": "music.new",
+        "title": "新建曲目"
+      },
+      {
+        "id": "music.open-player",
+        "title": "打开播放器"
+      },
+      {
+        "id": "music.search",
+        "title": "搜索音乐"
+      }
+    ],
+    "panels": [
+      {
+        "id": "player",
+        "title": "播放器"
+      }
+    ]
+  }
+}
