@@ -12,14 +12,22 @@ import { requestTrackAutoPlay } from "./music-autoplay";
 import { getMusicHostApi } from "./music-host";
 import { shouldRestoreMusicPlaybackAfterColdStart } from "./playback-cold-restore";
 import {
-  buildMusicPlaybackSessionSnapshot,
+  MUSIC_PLAYBACK_SESSION_BUILD,
   readMusicPlaybackSessionSnapshotSync,
   resolveMusicPlaybackSessionMerge,
+  resolveMusicPlaybackSessionWrite,
   writeMusicPlaybackSessionSnapshotSync,
 } from "./playback-session";
 import { getMusicBoundSync, useMusicDemoStore } from "./store";
 
 export { shouldRestoreMusicPlaybackAfterColdStart } from "./playback-cold-restore";
+
+function publishMusicPlaybackSessionBuildStamp(): void {
+  const bag = globalThis as typeof globalThis & {
+    __agnxMusicPlaybackSessionBuild?: string;
+  };
+  bag.__agnxMusicPlaybackSessionBuild = MUSIC_PLAYBACK_SESSION_BUILD;
+}
 
 export interface MusicPlaybackUiSink {
   onTimeUpdate?: (currentTime: number) => void;
@@ -88,38 +96,35 @@ export function flushMusicPlaybackSessionSnapshot(): void {
     state.setPlaybackPosition(liveSec);
   }
   const latest = useMusicDemoStore.getState();
-  writeMusicPlaybackSessionSnapshotSync(
-    buildMusicPlaybackSessionSnapshot({
-      nowPlayingId: latest.nowPlayingId,
-      wantsPlaying: latest.wantsPlaying || livePlaying,
-      playbackPositionSec: Math.max(latest.playbackPositionSec, liveSec),
-      audioCurrentTimeSec: liveSec,
-    }),
-  );
+  // remount/水合瞬间 nowPlaying 可能短暂为空：禁止用空快照冲掉已有会话。
+  const next = resolveMusicPlaybackSessionWrite({
+    nowPlayingId: latest.nowPlayingId,
+    wantsPlaying: latest.wantsPlaying || livePlaying,
+    playbackPositionSec: Math.max(latest.playbackPositionSec, liveSec),
+    livePlaying,
+    existing: readMusicPlaybackSessionSnapshotSync(),
+  });
+  if (!next) {
+    return;
+  }
+  writeMusicPlaybackSessionSnapshotSync(next);
 }
 
 function writeLiveMusicPlaybackSessionSnapshot(positionSec: number): void {
   const state = useMusicDemoStore.getState();
   const audio = getMusicPlaybackAudio();
   const livePlaying = Boolean(audio && audio.src && !audio.paused);
-  const existing = readMusicPlaybackSessionSnapshotSync();
-  let pos = Math.max(0, Math.floor(positionSec));
-  // 刷新后 audio 尚在 0、seek 未完成时，禁止用更小进度冲掉会话块。
-  if (
-    existing &&
-    existing.nowPlayingId &&
-    existing.nowPlayingId === state.nowPlayingId &&
-    existing.playbackPositionSec > pos
-  ) {
-    pos = existing.playbackPositionSec;
+  const next = resolveMusicPlaybackSessionWrite({
+    nowPlayingId: state.nowPlayingId,
+    wantsPlaying: state.wantsPlaying || livePlaying,
+    playbackPositionSec: Math.max(0, Math.floor(positionSec)),
+    livePlaying,
+    existing: readMusicPlaybackSessionSnapshotSync(),
+  });
+  if (!next) {
+    return;
   }
-  writeMusicPlaybackSessionSnapshotSync(
-    buildMusicPlaybackSessionSnapshot({
-      nowPlayingId: state.nowPlayingId,
-      wantsPlaying: state.wantsPlaying || livePlaying,
-      playbackPositionSec: pos,
-    }),
-  );
+  writeMusicPlaybackSessionSnapshotSync(next);
 }
 
 /** 水合后把同步会话块合并进 store（进度取大；意图以快照为准）。 */
@@ -595,6 +600,7 @@ export function ensureMusicPlaybackRuntime(): void {
   }
   runtimeAudio = audio;
   runtimeInstalled = true;
+  publishMusicPlaybackSessionBuildStamp();
   audio.addEventListener("ended", handleEnded);
   audio.addEventListener("timeupdate", handleTimeUpdate);
   ensureWantsPlayingBridge();

@@ -283,10 +283,35 @@ function resolveMusicPlaybackSessionMerge(input) {
     wantsPlaying: snap.wantsPlaying
   };
 }
-var MUSIC_PLAYBACK_SESSION_STORAGE_KEY;
+function resolveMusicPlaybackSessionWrite(input) {
+  const id = input.nowPlayingId?.trim() ? input.nowPlayingId.trim() : null;
+  if (!id) {
+    return null;
+  }
+  const existing = input.existing;
+  const sameTrack = Boolean(existing?.nowPlayingId && existing.nowPlayingId === id);
+  const incomingSec = typeof input.playbackPositionSec === "number" && Number.isFinite(input.playbackPositionSec) ? Math.max(0, Math.floor(input.playbackPositionSec)) : 0;
+  let playbackPositionSec = incomingSec;
+  if (sameTrack && existing && existing.playbackPositionSec > playbackPositionSec) {
+    playbackPositionSec = existing.playbackPositionSec;
+  }
+  const livePlaying = Boolean(input.livePlaying);
+  let wantsPlaying = Boolean(input.wantsPlaying) || livePlaying;
+  if (sameTrack && existing?.wantsPlaying && !livePlaying && incomingSec === 0) {
+    wantsPlaying = true;
+  }
+  return buildMusicPlaybackSessionSnapshot({
+    nowPlayingId: id,
+    wantsPlaying,
+    playbackPositionSec,
+    updatedAt: input.updatedAt
+  });
+}
+var MUSIC_PLAYBACK_SESSION_STORAGE_KEY, MUSIC_PLAYBACK_SESSION_BUILD;
 var init_playback_session = __esm({
   ".agnx/src/playback-session.ts"() {
     MUSIC_PLAYBACK_SESSION_STORAGE_KEY = "agnx.music.playback-session.v1";
+    MUSIC_PLAYBACK_SESSION_BUILD = "session-noclobber-v2";
   }
 });
 
@@ -2834,6 +2859,10 @@ __export(playback_runtime_exports, {
   syncMusicPlaybackPositionToStore: () => syncMusicPlaybackPositionToStore,
   yieldMusicPlaybackToRemoteClient: () => yieldMusicPlaybackToRemoteClient
 });
+function publishMusicPlaybackSessionBuildStamp() {
+  const bag = globalThis;
+  bag.__agnxMusicPlaybackSessionBuild = MUSIC_PLAYBACK_SESSION_BUILD;
+}
 function subscribeMusicPlaybackUi(sink) {
   ensureMusicPlaybackRuntime();
   uiSinks.add(sink);
@@ -2880,31 +2909,33 @@ function flushMusicPlaybackSessionSnapshot() {
     state.setPlaybackPosition(liveSec);
   }
   const latest = useMusicDemoStore.getState();
-  writeMusicPlaybackSessionSnapshotSync(
-    buildMusicPlaybackSessionSnapshot({
-      nowPlayingId: latest.nowPlayingId,
-      wantsPlaying: latest.wantsPlaying || livePlaying,
-      playbackPositionSec: Math.max(latest.playbackPositionSec, liveSec),
-      audioCurrentTimeSec: liveSec
-    })
-  );
+  const next = resolveMusicPlaybackSessionWrite({
+    nowPlayingId: latest.nowPlayingId,
+    wantsPlaying: latest.wantsPlaying || livePlaying,
+    playbackPositionSec: Math.max(latest.playbackPositionSec, liveSec),
+    livePlaying,
+    existing: readMusicPlaybackSessionSnapshotSync()
+  });
+  if (!next) {
+    return;
+  }
+  writeMusicPlaybackSessionSnapshotSync(next);
 }
 function writeLiveMusicPlaybackSessionSnapshot(positionSec) {
   const state = useMusicDemoStore.getState();
   const audio = getMusicPlaybackAudio();
   const livePlaying = Boolean(audio && audio.src && !audio.paused);
-  const existing = readMusicPlaybackSessionSnapshotSync();
-  let pos = Math.max(0, Math.floor(positionSec));
-  if (existing && existing.nowPlayingId && existing.nowPlayingId === state.nowPlayingId && existing.playbackPositionSec > pos) {
-    pos = existing.playbackPositionSec;
+  const next = resolveMusicPlaybackSessionWrite({
+    nowPlayingId: state.nowPlayingId,
+    wantsPlaying: state.wantsPlaying || livePlaying,
+    playbackPositionSec: Math.max(0, Math.floor(positionSec)),
+    livePlaying,
+    existing: readMusicPlaybackSessionSnapshotSync()
+  });
+  if (!next) {
+    return;
   }
-  writeMusicPlaybackSessionSnapshotSync(
-    buildMusicPlaybackSessionSnapshot({
-      nowPlayingId: state.nowPlayingId,
-      wantsPlaying: state.wantsPlaying || livePlaying,
-      playbackPositionSec: pos
-    })
-  );
+  writeMusicPlaybackSessionSnapshotSync(next);
 }
 function applyMusicPlaybackSessionSnapshotAfterHydrate() {
   const state = useMusicDemoStore.getState();
@@ -3287,6 +3318,7 @@ function ensureMusicPlaybackRuntime() {
   }
   runtimeAudio = audio;
   runtimeInstalled = true;
+  publishMusicPlaybackSessionBuildStamp();
   audio.addEventListener("ended", handleEnded);
   audio.addEventListener("timeupdate", handleTimeUpdate);
   ensureWantsPlayingBridge();

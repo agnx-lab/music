@@ -3,6 +3,9 @@
 
 export const MUSIC_PLAYBACK_SESSION_STORAGE_KEY = "agnx.music.playback-session.v1";
 
+/** 调试热更可见戳：remount 后可在控制台看 `__agnxMusicPlaybackSessionBuild`。 */
+export const MUSIC_PLAYBACK_SESSION_BUILD = "session-noclobber-v2";
+
 export interface MusicPlaybackSessionSnapshot {
   nowPlayingId: string | null;
   wantsPlaying: boolean;
@@ -140,4 +143,43 @@ export function resolveMusicPlaybackSessionMerge(input: {
     playbackPositionSec: Math.max(storeSec, snap.playbackPositionSec),
     wantsPlaying: snap.wantsPlaying,
   };
+}
+
+/**
+ * 写盘前决议：无曲目则跳过（禁止用 null/0 冲掉已有会话）；
+ * 同曲进度不降级；remount 瞬间 store/audio 都是 0 时保留原 wantsPlaying。
+ */
+export function resolveMusicPlaybackSessionWrite(input: {
+  nowPlayingId: string | null;
+  wantsPlaying: boolean;
+  playbackPositionSec: number;
+  livePlaying?: boolean;
+  existing: MusicPlaybackSessionSnapshot | null;
+  updatedAt?: number;
+}): MusicPlaybackSessionSnapshot | null {
+  const id = input.nowPlayingId?.trim() ? input.nowPlayingId.trim() : null;
+  if (!id) {
+    return null;
+  }
+  const existing = input.existing;
+  const sameTrack = Boolean(existing?.nowPlayingId && existing.nowPlayingId === id);
+  const incomingSec =
+    typeof input.playbackPositionSec === "number" && Number.isFinite(input.playbackPositionSec)
+      ? Math.max(0, Math.floor(input.playbackPositionSec))
+      : 0;
+  let playbackPositionSec = incomingSec;
+  if (sameTrack && existing && existing.playbackPositionSec > playbackPositionSec) {
+    playbackPositionSec = existing.playbackPositionSec;
+  }
+  const livePlaying = Boolean(input.livePlaying);
+  let wantsPlaying = Boolean(input.wantsPlaying) || livePlaying;
+  if (sameTrack && existing?.wantsPlaying && !livePlaying && incomingSec === 0) {
+    wantsPlaying = true;
+  }
+  return buildMusicPlaybackSessionSnapshot({
+    nowPlayingId: id,
+    wantsPlaying,
+    playbackPositionSec,
+    updatedAt: input.updatedAt,
+  });
 }

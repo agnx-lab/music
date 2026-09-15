@@ -4,6 +4,7 @@ import {
   buildMusicPlaybackSessionSnapshot,
   normalizeMusicPlaybackSessionSnapshot,
   resolveMusicPlaybackSessionMerge,
+  resolveMusicPlaybackSessionWrite,
 } from "./playback-session";
 
 describe("buildMusicPlaybackSessionSnapshot", () => {
@@ -111,6 +112,71 @@ describe("resolveMusicPlaybackSessionMerge", () => {
       apply: true,
       playbackPositionSec: 50,
       wantsPlaying: false,
+    });
+  });
+});
+
+describe("resolveMusicPlaybackSessionWrite", () => {
+  it("skips write when nowPlayingId is empty (do not clobber)", () => {
+    expect(
+      resolveMusicPlaybackSessionWrite({
+        nowPlayingId: null,
+        wantsPlaying: false,
+        playbackPositionSec: 0,
+        existing: {
+          nowPlayingId: "t1",
+          wantsPlaying: true,
+          playbackPositionSec: 40,
+          updatedAt: 1,
+        },
+        updatedAt: 2,
+      }),
+    ).toBeNull();
+  });
+
+  it("does not downgrade position on same track", () => {
+    expect(
+      resolveMusicPlaybackSessionWrite({
+        nowPlayingId: "t1",
+        wantsPlaying: true,
+        playbackPositionSec: 0,
+        livePlaying: false,
+        existing: {
+          nowPlayingId: "t1",
+          wantsPlaying: true,
+          playbackPositionSec: 88,
+          updatedAt: 1,
+        },
+        updatedAt: 2,
+      }),
+    ).toEqual({
+      nowPlayingId: "t1",
+      wantsPlaying: true,
+      playbackPositionSec: 88,
+      updatedAt: 2,
+    });
+  });
+
+  it("keeps paused intent when progress is real", () => {
+    expect(
+      resolveMusicPlaybackSessionWrite({
+        nowPlayingId: "t1",
+        wantsPlaying: false,
+        playbackPositionSec: 50,
+        livePlaying: false,
+        existing: {
+          nowPlayingId: "t1",
+          wantsPlaying: true,
+          playbackPositionSec: 40,
+          updatedAt: 1,
+        },
+        updatedAt: 2,
+      }),
+    ).toEqual({
+      nowPlayingId: "t1",
+      wantsPlaying: false,
+      playbackPositionSec: 50,
+      updatedAt: 2,
     });
   });
 });
