@@ -113,7 +113,14 @@ import {
   type ExtractedAtmospherePalette,
 } from "./extract-cover-atmosphere";
 import { maxLyricContentWidthPx, resolveDesktopStageSplit } from "./resolve-desktop-stage-split";
-import { requestTrackAutoPlay, takePendingAutoPlayTrackId } from "./music-autoplay";
+import {
+  clearPendingTrackAutoPlay,
+  requestTrackAutoPlay,
+  resolveMusicResumePositionSec,
+  shouldRequestAutoPlayOnOpenPlayer,
+  takePendingAutoPlayTrackId,
+} from "./music-autoplay";
+import { readMusicPlaybackSessionSnapshotSync } from "./playback-session";
 import {
   downloadAndPersistTrackBundle,
   isMusicLocalPersistedUri,
@@ -143,7 +150,7 @@ import type { SearchHitTrack } from "./resource/types";
 import {
   getMusicPlaybackAudio,
   getMusicPlaybackLoadedMeta,
-  isMusicPlaybackLiveOnTrack,
+  isMusicPlaybackAttachedOnTrack,
   isMusicPlayInterruptedError,
   isMusicAutoplayBlockedError,
   prepareMusicPlaybackSourceChange,
@@ -1829,15 +1836,28 @@ function MusicPlayerContent(props: { appId: string; panelId: string; entityId: s
       loadedTrackIdRef.current != null && loadedTrackIdRef.current !== track.id;
     // 仅在同曲重挂载时读取持久化进度；不要把 playbackPositionSec 放进依赖，
     // 否则 seek/暂停边界写回进度也会触发整段 audio 重载。
-    const resumeAt = switchingTrack
-      ? 0
-      : track.id === useMusicDemoStore.getState().nowPlayingId
-        ? useMusicDemoStore.getState().playbackPositionSec
+    // hard-load 前取 store / 同步会话块 / 单例 currentTime 较大值，硬刷新不丢进度。
+    const sessionSnap = readMusicPlaybackSessionSnapshotSync();
+    const sessionPos =
+      sessionSnap && sessionSnap.nowPlayingId === track.id
+        ? sessionSnap.playbackPositionSec
         : 0;
+    const resumeAt = resolveMusicResumePositionSec({
+      switchingTrack,
+      nowPlayingMatches: track.id === useMusicDemoStore.getState().nowPlayingId,
+      storePositionSec: Math.max(
+        useMusicDemoStore.getState().playbackPositionSec,
+        sessionPos,
+      ),
+      audioCurrentTimeSec: audio.currentTime || 0,
+    });
+    if (!switchingTrack && resumeAt > useMusicDemoStore.getState().playbackPositionSec) {
+      useMusicDemoStore.getState().setPlaybackPosition(resumeAt);
+    }
     resumeAfterLoadRef.current = false;
 
-    // 从设置/Tab LRU 卸载后返回：单例仍在播同一曲同源时，禁止重新 load（否则会顿挫）
-    const alreadyLiveOnSameTrack = isMusicPlaybackLiveOnTrack({
+    // 从设置/Tab 关闭后返回：同曲单例仍挂着 src（含暂停）时禁止 hard-load 归零。
+    const attachedOnSameTrack = isMusicPlaybackAttachedOnTrack({
       trackId: track.id,
       sourceUri: track.sourceUri,
       nowPlayingId: useMusicDemoStore.getState().nowPlayingId,
@@ -1845,13 +1865,13 @@ function MusicPlayerContent(props: { appId: string; panelId: string; entityId: s
       loadedTrackId: loadedTrackIdRef.current,
       loadedSourceUri: loadedSourceUriRef.current,
     });
-    if (alreadyLiveOnSameTrack) {
+    if (attachedOnSameTrack) {
       loadedTrackIdRef.current = track.id;
       loadedSourceUriRef.current = track.sourceUri;
       setMusicPlaybackLoadedMeta({ trackId: track.id, sourceUri: track.sourceUri });
-      setPlaying(!audio.paused);
-      setStreamResolving(false);
-      commitPlaybackUiTime(audio.currentTime || 0, true);
+      syncMusicPlaybackPositionToStore(true);
+      const liveAt = Math.max(0, audio.currentTime || resumeAt || 0);
+      commitPlaybackUiTime(liveAt, true);
       const liveDuration = readMusicPlaybackDurationSec(audio);
       setDuration(liveDuration);
       if (!(liveDuration > 0)) {
@@ -1875,6 +1895,25 @@ function MusicPlayerContent(props: { appId: string; panelId: string; entityId: s
       }
       if (playingFromLocalDisk) {
         setBufferedProgress(1);
+      }
+      setStreamResolving(false);
+      if (shouldResume && audio.paused) {
+        void safeMusicPlay(audio).then((ok) => {
+          if (cancelled || useMusicDemoStore.getState().nowPlayingId !== track.id) {
+            return undefined;
+          }
+          if (ok) {
+            setPlaying(true);
+            setWantsPlaying(true);
+          } else {
+            setPlaying(false);
+            setWantsPlaying(true);
+            void maybeRestoreMusicPlaybackAfterColdStart();
+          }
+          return undefined;
+        });
+      } else {
+        setPlaying(!audio.paused);
       }
       return () => {
         cancelled = true;
@@ -2002,21 +2041,62 @@ function MusicPlayerContent(props: { appId: string; panelId: string; entityId: s
           return;
         }
         const loadedMeta = getMusicPlaybackLoadedMeta();
-        // 仍在播同一 src 时不要换 blob / load（须比对目标 uri，避免切歌时旧源仍在播被误判）
+        // 同曲同源已挂好时不要换 blob / load（含暂停重挂载；须比对目标 uri）
         const sameSrc =
           Boolean(audio.src) &&
           (audio.src === uri || objectUrlRef.current === uri) &&
           (loadedTrackIdRef.current === track.id || loadedMeta?.trackId === track.id);
-        if (!audio.paused && sameSrc && shouldResume) {
+        if (sameSrc) {
           loadedTrackIdRef.current = track.id;
           loadedSourceUriRef.current = rawUri;
           setMusicPlaybackLoadedMeta({ trackId: track.id, sourceUri: rawUri });
-          setPlaying(true);
-          setStreamResolving(false);
-          commitPlaybackUiTime(audio.currentTime || 0, true);
+          syncMusicPlaybackPositionToStore(true);
+          commitPlaybackUiTime(audio.currentTime || resumeAt || 0, true);
           setDuration(readMusicPlaybackDurationSec(audio));
+          if (shouldResume) {
+            if (!audio.paused) {
+              setPlaying(true);
+              setStreamResolving(false);
+              return;
+            }
+            const started = await safeMusicPlay(audio);
+            if (cancelled || useMusicDemoStore.getState().nowPlayingId !== track.id) {
+              return;
+            }
+            if (started) {
+              setPlaying(true);
+              setWantsPlaying(true);
+              setStreamResolving(false);
+            } else {
+              setPlaying(false);
+              setWantsPlaying(true);
+              setStreamResolving(false);
+              void maybeRestoreMusicPlaybackAfterColdStart();
+            }
+            return;
+          }
+          setPlaying(false);
+          setStreamResolving(false);
           return;
         }
+        // hard-load 前再固化一次进度（prepare 会把 currentTime 打成 0）
+        if (!switchingTrack && track.id === useMusicDemoStore.getState().nowPlayingId) {
+          const liveSec = Math.max(
+            0,
+            Math.floor(audio.currentTime || 0),
+            useMusicDemoStore.getState().playbackPositionSec,
+            resumeAt,
+          );
+          if (liveSec > useMusicDemoStore.getState().playbackPositionSec) {
+            useMusicDemoStore.getState().setPlaybackPosition(liveSec);
+          }
+        }
+        const seekTo = resolveMusicResumePositionSec({
+          switchingTrack,
+          nowPlayingMatches: track.id === useMusicDemoStore.getState().nowPlayingId,
+          storePositionSec: useMusicDemoStore.getState().playbackPositionSec,
+          audioCurrentTimeSec: audio.currentTime || 0,
+        });
         if (objectUrlRef.current?.startsWith("blob:") && objectUrlRef.current !== uri) {
           URL.revokeObjectURL(objectUrlRef.current);
         }
@@ -2039,10 +2119,10 @@ function MusicPlayerContent(props: { appId: string; panelId: string; entityId: s
         if (durationSec > 0) {
           setDuration(durationSec);
         }
-        if (resumeAt > 0) {
+        if (seekTo > 0) {
           try {
             playbackAudio.currentTime =
-              durationSec > 0 ? Math.min(resumeAt, Math.max(0, durationSec - 0.05)) : resumeAt;
+              durationSec > 0 ? Math.min(seekTo, Math.max(0, durationSec - 0.05)) : seekTo;
           } catch {
             // ignore
           }
@@ -5628,10 +5708,22 @@ const styles = StyleSheet.create((theme) => ({
 function openMusicPlayerTab(
   track: Pick<DemoTrack, "id" | "title"> | null,
   context?: WorkspaceAppRunContext,
+  options?: { autoPlay?: boolean },
 ): boolean {
   if (track) {
-    requestTrackAutoPlay(track.id);
-    useMusicDemoStore.getState().setNowPlaying(track.id);
+    const state = useMusicDemoStore.getState();
+    state.setNowPlaying(track.id);
+    // 关 Tab 再开：按 wantsPlaying 恢复，不强制从头起播；上传/点曲才 explicitAutoPlay。
+    if (
+      shouldRequestAutoPlayOnOpenPlayer({
+        explicitAutoPlay: options?.autoPlay,
+        wantsPlaying: state.wantsPlaying,
+      })
+    ) {
+      requestTrackAutoPlay(track.id);
+    } else {
+      clearPendingTrackAutoPlay();
+    }
   }
   return host().openMiniAppTab({
     appId: MUSIC_APP_ID,
@@ -5664,7 +5756,7 @@ async function uploadAndOpenTracks(context?: WorkspaceAppRunContext): Promise<De
   );
   const first = created[0];
   if (first) {
-    openMusicPlayerTab(first, context);
+    openMusicPlayerTab(first, context, { autoPlay: true });
   }
   return created;
 }

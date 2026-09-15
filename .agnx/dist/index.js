@@ -29,16 +29,16 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/music-ids.ts
+// .agnx/src/music-ids.ts
 var MUSIC_APP_ID, MUSIC_LEGACY_APP_ID;
 var init_music_ids = __esm({
-  "src/music-ids.ts"() {
+  ".agnx/src/music-ids.ts"() {
     MUSIC_APP_ID = "music";
     MUSIC_LEGACY_APP_ID = "com.example.music";
   }
 });
 
-// src/music-runtime-app-id.ts
+// .agnx/src/music-runtime-app-id.ts
 function setMusicRuntimeAppId(appId2) {
   const trimmed = appId2.trim();
   runtimeAppId = trimmed || MUSIC_APP_ID;
@@ -61,13 +61,13 @@ function getMusicLegacyStorageAppId() {
 }
 var runtimeAppId;
 var init_music_runtime_app_id = __esm({
-  "src/music-runtime-app-id.ts"() {
+  ".agnx/src/music-runtime-app-id.ts"() {
     init_music_ids();
     runtimeAppId = MUSIC_APP_ID;
   }
 });
 
-// src/music-host.ts
+// .agnx/src/music-host.ts
 var music_host_exports = {};
 __export(music_host_exports, {
   getMusicHostApi: () => getMusicHostApi,
@@ -92,12 +92,12 @@ function tryGetMusicHostApi() {
 }
 var hostApi;
 var init_music_host = __esm({
-  "src/music-host.ts"() {
+  ".agnx/src/music-host.ts"() {
     hostApi = null;
   }
 });
 
-// src/playback-leader.ts
+// .agnx/src/playback-leader.ts
 function initMusicPlaybackLeader(host2) {
   if (localClientIdPromise) {
     return;
@@ -143,7 +143,7 @@ function shouldHandleRemotePlaybackFocusClaim(publisherClientId) {
 }
 var MUSIC_PLAYBACK_FOCUS_CHANNEL, localClientId, localClientIdPromise;
 var init_playback_leader = __esm({
-  "src/playback-leader.ts"() {
+  ".agnx/src/playback-leader.ts"() {
     init_music_ids();
     MUSIC_PLAYBACK_FOCUS_CHANNEL = "music-playback-focus";
     localClientId = null;
@@ -151,10 +151,13 @@ var init_playback_leader = __esm({
   }
 });
 
-// src/music-autoplay.ts
+// .agnx/src/music-autoplay.ts
 function requestTrackAutoPlay(trackId) {
   const normalized = trackId.trim();
   pendingAutoPlayTrackId = normalized.length > 0 ? normalized : null;
+}
+function clearPendingTrackAutoPlay() {
+  pendingAutoPlayTrackId = null;
 }
 function takePendingAutoPlayTrackId(expectedTrackId) {
   if (!pendingAutoPlayTrackId || pendingAutoPlayTrackId !== expectedTrackId) {
@@ -163,14 +166,25 @@ function takePendingAutoPlayTrackId(expectedTrackId) {
   pendingAutoPlayTrackId = null;
   return true;
 }
+function shouldRequestAutoPlayOnOpenPlayer(input) {
+  return input.explicitAutoPlay === true || Boolean(input.wantsPlaying);
+}
+function resolveMusicResumePositionSec(input) {
+  if (input.switchingTrack || !input.nowPlayingMatches) {
+    return 0;
+  }
+  const storeSec = typeof input.storePositionSec === "number" && Number.isFinite(input.storePositionSec) ? Math.max(0, Math.floor(input.storePositionSec)) : 0;
+  const liveSec = typeof input.audioCurrentTimeSec === "number" && Number.isFinite(input.audioCurrentTimeSec) ? Math.max(0, Math.floor(input.audioCurrentTimeSec)) : 0;
+  return Math.max(storeSec, liveSec);
+}
 var pendingAutoPlayTrackId;
 var init_music_autoplay = __esm({
-  "src/music-autoplay.ts"() {
+  ".agnx/src/music-autoplay.ts"() {
     pendingAutoPlayTrackId = null;
   }
 });
 
-// src/playback-cold-restore.ts
+// .agnx/src/playback-cold-restore.ts
 function shouldRestoreMusicPlaybackAfterColdStart(state) {
   if (!state.wantsPlaying || !state.nowPlayingId) {
     return null;
@@ -183,11 +197,100 @@ function shouldRestoreMusicPlaybackAfterColdStart(state) {
   return { trackId: state.nowPlayingId, sourceUri };
 }
 var init_playback_cold_restore = __esm({
-  "src/playback-cold-restore.ts"() {
+  ".agnx/src/playback-cold-restore.ts"() {
   }
 });
 
-// src/track-menu.ts
+// .agnx/src/playback-session.ts
+function normalizeMusicPlaybackSessionSnapshot(raw) {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+  const doc = raw;
+  const nowPlayingId = typeof doc.nowPlayingId === "string" && doc.nowPlayingId.trim().length > 0 ? doc.nowPlayingId.trim() : doc.nowPlayingId === null ? null : null;
+  if (doc.nowPlayingId != null && typeof doc.nowPlayingId !== "string") {
+    return null;
+  }
+  const positionRaw = doc.playbackPositionSec;
+  const playbackPositionSec = typeof positionRaw === "number" && Number.isFinite(positionRaw) && positionRaw >= 0 ? Math.floor(positionRaw) : 0;
+  const updatedRaw = doc.updatedAt;
+  const updatedAt = typeof updatedRaw === "number" && Number.isFinite(updatedRaw) && updatedRaw > 0 ? Math.floor(updatedRaw) : 0;
+  if (!updatedAt) {
+    return null;
+  }
+  return {
+    nowPlayingId,
+    wantsPlaying: Boolean(doc.wantsPlaying),
+    playbackPositionSec,
+    updatedAt
+  };
+}
+function buildMusicPlaybackSessionSnapshot(input) {
+  const live = typeof input.audioCurrentTimeSec === "number" && Number.isFinite(input.audioCurrentTimeSec) ? Math.max(0, Math.floor(input.audioCurrentTimeSec)) : 0;
+  const storeSec = typeof input.playbackPositionSec === "number" && Number.isFinite(input.playbackPositionSec) ? Math.max(0, Math.floor(input.playbackPositionSec)) : 0;
+  return {
+    nowPlayingId: input.nowPlayingId?.trim() ? input.nowPlayingId.trim() : null,
+    wantsPlaying: Boolean(input.wantsPlaying),
+    playbackPositionSec: Math.max(storeSec, live),
+    updatedAt: input.updatedAt ?? Date.now()
+  };
+}
+function writeMusicPlaybackSessionSnapshotSync(snapshot) {
+  if (typeof localStorage === "undefined") {
+    return false;
+  }
+  try {
+    localStorage.setItem(MUSIC_PLAYBACK_SESSION_STORAGE_KEY, JSON.stringify(snapshot));
+    return true;
+  } catch {
+    return false;
+  }
+}
+function readMusicPlaybackSessionSnapshotSync() {
+  if (typeof localStorage === "undefined") {
+    return null;
+  }
+  try {
+    const raw = localStorage.getItem(MUSIC_PLAYBACK_SESSION_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    return normalizeMusicPlaybackSessionSnapshot(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+function resolveMusicPlaybackSessionMerge(input) {
+  const snap = input.snapshot;
+  if (!snap?.nowPlayingId) {
+    return {
+      apply: false,
+      playbackPositionSec: input.storePlaybackPositionSec,
+      wantsPlaying: input.storeWantsPlaying
+    };
+  }
+  if (input.storeNowPlayingId && input.storeNowPlayingId !== snap.nowPlayingId) {
+    return {
+      apply: false,
+      playbackPositionSec: input.storePlaybackPositionSec,
+      wantsPlaying: input.storeWantsPlaying
+    };
+  }
+  const storeSec = typeof input.storePlaybackPositionSec === "number" && Number.isFinite(input.storePlaybackPositionSec) ? Math.max(0, Math.floor(input.storePlaybackPositionSec)) : 0;
+  return {
+    apply: true,
+    playbackPositionSec: Math.max(storeSec, snap.playbackPositionSec),
+    wantsPlaying: snap.wantsPlaying
+  };
+}
+var MUSIC_PLAYBACK_SESSION_STORAGE_KEY;
+var init_playback_session = __esm({
+  ".agnx/src/playback-session.ts"() {
+    MUSIC_PLAYBACK_SESSION_STORAGE_KEY = "agnx.music.playback-session.v1";
+  }
+});
+
+// .agnx/src/track-menu.ts
 function resolveMusicTrackMenuIcon(actionId, pinned) {
   if (actionId === "pin") {
     return pinned ? import_lucide_react_native.PinOff : import_lucide_react_native.Pin;
@@ -275,7 +378,7 @@ function buildMusicPlayerOverflowMenuItems(input) {
 }
 var import_lucide_react_native, MUSIC_TRACK_MENU_ACTION_LABELS, MUSIC_TRACK_MENU_ICONS, MUSIC_TRACK_MENU_CONTRIBUTION_IDS, MUSIC_TRACK_MENU_ACTION_BY_CONTRIBUTION_ID, MUSIC_TRACK_MENU_SHORTCUT_KEYS, MUSIC_TRACK_MENU_SHORTCUT_SOURCE_KEYS, MUSIC_SIDEBAR_TRACK_MENU_IDS, MUSIC_SEARCH_HIT_MENU_ACTION_LABELS, MUSIC_SEARCH_HIT_MENU_ICONS, MUSIC_SEARCH_HIT_MENU_IDS, MUSIC_SEARCH_COLLECTION_MENU_ACTION_LABELS, MUSIC_SEARCH_COLLECTION_MENU_ICONS, MUSIC_SEARCH_COLLECTION_MENU_IDS;
 var init_track_menu = __esm({
-  "src/track-menu.ts"() {
+  ".agnx/src/track-menu.ts"() {
     import_lucide_react_native = require("lucide-react-native");
     MUSIC_TRACK_MENU_ACTION_LABELS = {
       pin: "\u7F6E\u9876",
@@ -377,7 +480,7 @@ var init_track_menu = __esm({
   }
 });
 
-// src/player-action-layout.ts
+// .agnx/src/player-action-layout.ts
 function getDefaultMusicPlayerActionLayout() {
   return {
     bar: ["pin", "playNext", "addPlaylist"],
@@ -458,7 +561,7 @@ function resolveMusicPlayerBarActionIds(layout) {
 }
 var MUSIC_PLAYER_ACTION_IDS, MUSIC_PLAYER_ACTION_LABELS, LEGACY_DROPPED_IDS;
 var init_player_action_layout = __esm({
-  "src/player-action-layout.ts"() {
+  ".agnx/src/player-action-layout.ts"() {
     init_track_menu();
     MUSIC_PLAYER_ACTION_IDS = [
       ...MUSIC_SIDEBAR_TRACK_MENU_IDS
@@ -484,7 +587,7 @@ var init_player_action_layout = __esm({
   }
 });
 
-// src/cover-url-quality.ts
+// .agnx/src/cover-url-quality.ts
 function neteaseParamFor(quality) {
   if (quality === "thumb") {
     return "300y300";
@@ -565,14 +668,14 @@ function coverUrlForThumb(uri) {
 }
 var NETEASE_HOST_RE, QQ_SIZE_RE, PIXABAY_SIZE_RE;
 var init_cover_url_quality = __esm({
-  "src/cover-url-quality.ts"() {
+  ".agnx/src/cover-url-quality.ts"() {
     NETEASE_HOST_RE = /(?:^|\.)music\.126\.net$/i;
     QQ_SIZE_RE = /(T\d+R)\d+x\d+(M\d+)/i;
     PIXABAY_SIZE_RE = /_(\d+)x(\d+)(\.[a-z0-9]+)(?:\?|#|$)/i;
   }
 });
 
-// src/resource/provider-catalog.ts
+// .agnx/src/resource/provider-catalog.ts
 function getMusicProviderCapabilities(providerId) {
   return CAP_BY_ID.get(providerId) ?? null;
 }
@@ -624,7 +727,7 @@ function shouldIncludeProviderForSelection(providerId, selected) {
 }
 var MUSIC_PROVIDER_CAPABILITIES, CAP_BY_ID;
 var init_provider_catalog = __esm({
-  "src/resource/provider-catalog.ts"() {
+  ".agnx/src/resource/provider-catalog.ts"() {
     MUSIC_PROVIDER_CAPABILITIES = [
       {
         id: "local",
@@ -721,7 +824,7 @@ var init_provider_catalog = __esm({
   }
 });
 
-// src/resource/platform-registry.ts
+// .agnx/src/resource/platform-registry.ts
 function listSearchFilterPlatforms() {
   const wired = /* @__PURE__ */ new Set([
     "local",
@@ -767,7 +870,7 @@ function normalizeSearchProviderSelection(value) {
 }
 var PLATFORM_CAPABILITIES, WIRED_ONLINE_SEARCH_PLATFORM_IDS, WIRED_DIRECT_SEARCH_PLATFORM_IDS, PLATFORM_MAP, KNOWN_SEARCH_PROVIDER_IDS;
 var init_platform_registry = __esm({
-  "src/resource/platform-registry.ts"() {
+  ".agnx/src/resource/platform-registry.ts"() {
     init_provider_catalog();
     PLATFORM_CAPABILITIES = [
       {
@@ -978,7 +1081,7 @@ var init_platform_registry = __esm({
   }
 });
 
-// src/resource/search-result-cache.ts
+// .agnx/src/resource/search-result-cache.ts
 function buildMusicSearchCacheKey(input) {
   const providers2 = [...input.providerIds].map((id) => id.trim()).filter(Boolean).sort();
   return `${input.scope}::${input.query.trim().toLowerCase()}::${providers2.join(",")}`;
@@ -1048,12 +1151,12 @@ function upsertMusicSearchCacheEntry(entries, next, maxEntries = 40) {
 }
 var DEFAULT_MUSIC_SEARCH_CACHE_TTL_MINUTES;
 var init_search_result_cache = __esm({
-  "src/resource/search-result-cache.ts"() {
+  ".agnx/src/resource/search-result-cache.ts"() {
     DEFAULT_MUSIC_SEARCH_CACHE_TTL_MINUTES = 15;
   }
 });
 
-// src/resource/collection-detail-cache.ts
+// .agnx/src/resource/collection-detail-cache.ts
 function buildMusicCollectionCacheKey(input) {
   return `${input.kind}::${input.providerId.trim()}::${input.remoteId.trim()}`;
 }
@@ -1070,12 +1173,12 @@ function upsertMusicCollectionCacheEntry(entries, next, maxEntries = MUSIC_COLLE
 }
 var MUSIC_COLLECTION_CACHE_MAX_ENTRIES;
 var init_collection_detail_cache = __esm({
-  "src/resource/collection-detail-cache.ts"() {
+  ".agnx/src/resource/collection-detail-cache.ts"() {
     MUSIC_COLLECTION_CACHE_MAX_ENTRIES = 40;
   }
 });
 
-// src/search-hit-identity.ts
+// .agnx/src/search-hit-identity.ts
 function normalizeRemotePageUrl(pageUrl) {
   const raw = pageUrl?.trim() ?? "";
   if (!raw) {
@@ -1187,11 +1290,11 @@ function sameSearchHitForDownloadBadge(track, hit) {
   return sameSearchHitIdentity(track, hit);
 }
 var init_search_hit_identity = __esm({
-  "src/search-hit-identity.ts"() {
+  ".agnx/src/search-hit-identity.ts"() {
   }
 });
 
-// src/app-prefs.ts
+// .agnx/src/app-prefs.ts
 function defaultMusicAppPrefsDocument() {
   return {
     version: 1,
@@ -1320,7 +1423,7 @@ async function saveMusicAppPrefs(_config, prefs) {
 }
 var import_async_storage, MUSIC_CONFIG_KEY, MUSIC_LOCAL_PREFS_STORAGE_KEY, MUSIC_LEGACY_LOCAL_PREFS_STORAGE_KEY;
 var init_app_prefs = __esm({
-  "src/app-prefs.ts"() {
+  ".agnx/src/app-prefs.ts"() {
     import_async_storage = __toESM(require("@react-native-async-storage/async-storage"));
     init_platform_registry();
     init_search_result_cache();
@@ -1331,7 +1434,7 @@ var init_app_prefs = __esm({
   }
 });
 
-// src/store.ts
+// .agnx/src/store.ts
 var store_exports = {};
 __export(store_exports, {
   MUSIC_MAX_VOLUME: () => MUSIC_MAX_VOLUME,
@@ -1922,6 +2025,8 @@ function bindMusicHostStorage(storage, sync, config) {
       searchProviderIds: legacyState?.searchProviderIds
     });
     applyMusicAppPrefsToStore(prefs);
+    const playbackRuntime = await Promise.resolve().then(() => (init_playback_runtime(), playback_runtime_exports));
+    playbackRuntime.applyMusicPlaybackSessionSnapshotAfterHydrate();
   })().finally(() => {
     hostHydrationCompleted = true;
     notifyMusicHostHydrationListeners();
@@ -2003,7 +2108,7 @@ function listTracksAsWorkspaceItems(query = "") {
 }
 var import_async_storage2, import_zustand, import_middleware, SEARCH_SCOPES, PERSIST_NAME, STATE_KEY, MAX_SEARCH_HISTORY, boundStorage, boundConfig, boundSync, syncUnsubscribe, playbackFocusUnsubscribe, configUnsubscribe, hostHydrationCompleted, hostHydrationListeners, HOST_WRITE_CIRCUIT_COOLDOWN_MS, hostWriteCircuitOpenUntil, hostWriteFailLoggedAt, hostWriteChain, configPersistTimer, MUSIC_MAX_VOLUME, COLLECTION_KINDS, PLAY_MODE_ORDER, hostBackedStorage, useMusicDemoStore;
 var init_store = __esm({
-  "src/store.ts"() {
+  ".agnx/src/store.ts"() {
     import_async_storage2 = __toESM(require("@react-native-async-storage/async-storage"));
     import_zustand = require("zustand");
     import_middleware = require("zustand/middleware");
@@ -2712,12 +2817,14 @@ var init_store = __esm({
   }
 });
 
-// src/playback-runtime.ts
+// .agnx/src/playback-runtime.ts
 var playback_runtime_exports = {};
 __export(playback_runtime_exports, {
   applyMusicPlaybackIntent: () => applyMusicPlaybackIntent,
+  applyMusicPlaybackSessionSnapshotAfterHydrate: () => applyMusicPlaybackSessionSnapshotAfterHydrate,
   ensureMusicColdRestoreWatch: () => ensureMusicColdRestoreWatch,
   ensureMusicPlaybackRuntime: () => ensureMusicPlaybackRuntime,
+  flushMusicPlaybackSessionSnapshot: () => flushMusicPlaybackSessionSnapshot,
   loadAndPlayTrackUriHeadless: () => loadAndPlayTrackUriHeadless,
   maybeRestoreMusicPlaybackAfterColdStart: () => maybeRestoreMusicPlaybackAfterColdStart,
   pauseLocalMusicAudioOutput: () => pauseLocalMusicAudioOutput,
@@ -2755,9 +2862,71 @@ function syncMusicPlaybackPositionToStore(force = false) {
   }
   const second = Math.max(0, Math.floor(audio.currentTime || 0));
   if (!force && state.playbackPositionSec === second) {
+    writeLiveMusicPlaybackSessionSnapshot(second);
     return;
   }
   state.setPlaybackPosition(second);
+  writeLiveMusicPlaybackSessionSnapshot(second);
+}
+function flushMusicPlaybackSessionSnapshot() {
+  const audio = getMusicPlaybackAudio();
+  const state = useMusicDemoStore.getState();
+  const liveSec = audio && Number.isFinite(audio.currentTime) ? Math.max(0, Math.floor(audio.currentTime)) : 0;
+  const livePlaying = Boolean(audio && audio.src && !audio.paused);
+  if (livePlaying && !state.wantsPlaying) {
+    state.setWantsPlaying(true);
+  }
+  if (state.nowPlayingId && liveSec > state.playbackPositionSec) {
+    state.setPlaybackPosition(liveSec);
+  }
+  const latest = useMusicDemoStore.getState();
+  writeMusicPlaybackSessionSnapshotSync(
+    buildMusicPlaybackSessionSnapshot({
+      nowPlayingId: latest.nowPlayingId,
+      wantsPlaying: latest.wantsPlaying || livePlaying,
+      playbackPositionSec: Math.max(latest.playbackPositionSec, liveSec),
+      audioCurrentTimeSec: liveSec
+    })
+  );
+}
+function writeLiveMusicPlaybackSessionSnapshot(positionSec) {
+  const state = useMusicDemoStore.getState();
+  const audio = getMusicPlaybackAudio();
+  const livePlaying = Boolean(audio && audio.src && !audio.paused);
+  const existing = readMusicPlaybackSessionSnapshotSync();
+  let pos = Math.max(0, Math.floor(positionSec));
+  if (existing && existing.nowPlayingId && existing.nowPlayingId === state.nowPlayingId && existing.playbackPositionSec > pos) {
+    pos = existing.playbackPositionSec;
+  }
+  writeMusicPlaybackSessionSnapshotSync(
+    buildMusicPlaybackSessionSnapshot({
+      nowPlayingId: state.nowPlayingId,
+      wantsPlaying: state.wantsPlaying || livePlaying,
+      playbackPositionSec: pos
+    })
+  );
+}
+function applyMusicPlaybackSessionSnapshotAfterHydrate() {
+  const state = useMusicDemoStore.getState();
+  const merged = resolveMusicPlaybackSessionMerge({
+    storeNowPlayingId: state.nowPlayingId,
+    storeWantsPlaying: state.wantsPlaying,
+    storePlaybackPositionSec: state.playbackPositionSec,
+    snapshot: readMusicPlaybackSessionSnapshotSync()
+  });
+  if (!merged.apply) {
+    return false;
+  }
+  if (merged.playbackPositionSec === state.playbackPositionSec && merged.wantsPlaying === state.wantsPlaying) {
+    return false;
+  }
+  if (merged.playbackPositionSec !== state.playbackPositionSec) {
+    state.setPlaybackPosition(merged.playbackPositionSec);
+  }
+  if (merged.wantsPlaying !== state.wantsPlaying) {
+    state.setWantsPlaying(merged.wantsPlaying);
+  }
+  return true;
 }
 function installPlaybackPositionLifecycleFlush() {
   if (typeof document === "undefined") {
@@ -2769,7 +2938,7 @@ function installPlaybackPositionLifecycleFlush() {
   }
   bag.__agnxMusicPositionLifecycleInstalled = true;
   const flush = () => {
-    syncMusicPlaybackPositionToStore(true);
+    flushMusicPlaybackSessionSnapshot();
   };
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
@@ -2777,6 +2946,7 @@ function installPlaybackPositionLifecycleFlush() {
     }
   });
   window.addEventListener("pagehide", flush);
+  window.addEventListener("beforeunload", flush);
 }
 async function applyMusicPlaybackIntent(wantsPlaying) {
   ensureMusicPlaybackRuntime();
@@ -2790,6 +2960,7 @@ async function applyMusicPlaybackIntent(wantsPlaying) {
     store.setWantsPlaying(next);
   }
   const applied = await syncWantsPlayingToAudio(next);
+  flushMusicPlaybackSessionSnapshot();
   const audio = getMusicPlaybackAudio();
   return {
     wantsPlaying: useMusicDemoStore.getState().wantsPlaying,
@@ -3005,6 +3176,7 @@ async function maybeRestoreMusicPlaybackAfterColdStart() {
   if (typeof Audio === "undefined") {
     return false;
   }
+  applyMusicPlaybackSessionSnapshotAfterHydrate();
   const state = useMusicDemoStore.getState();
   ensureMusicPlaybackRuntime();
   const audio = getMusicPlaybackAudio();
@@ -3023,10 +3195,13 @@ async function maybeRestoreMusicPlaybackAfterColdStart() {
       coldStartRestoreSucceeded = true;
       return true;
     }
+    const latest = useMusicDemoStore.getState();
+    const session = readMusicPlaybackSessionSnapshotSync();
+    const seekSec = session && session.nowPlayingId === target.trackId ? Math.max(latest.playbackPositionSec, session.playbackPositionSec) : latest.playbackPositionSec;
     const started = await loadAndPlayTrackUriHeadless({
       trackId: target.trackId,
       sourceUri: target.sourceUri,
-      seekSec: state.playbackPositionSec
+      seekSec
     });
     if (started) {
       coldStartRestoreSucceeded = true;
@@ -3084,6 +3259,16 @@ function handleTimeUpdate() {
     return;
   }
   notifyTime(audio.currentTime || 0);
+  if (audio.paused || !useMusicDemoStore.getState().nowPlayingId) {
+    return;
+  }
+  const sec = Math.max(0, Math.floor(audio.currentTime || 0));
+  const bag = globalThis;
+  const last = bag.__agnxMusicSessionThrottleSec ?? 0;
+  if (sec > 0 && sec - last >= 5) {
+    bag.__agnxMusicSessionThrottleSec = sec;
+    writeLiveMusicPlaybackSessionSnapshot(sec);
+  }
 }
 function ensureMusicPlaybackRuntime() {
   if (typeof Audio === "undefined") {
@@ -3109,12 +3294,13 @@ function ensureMusicPlaybackRuntime() {
 }
 var uiSinks, runtimeInstalled, runtimeAudio, wantsPlayingBridgeInstalled, lastBridgedWantsPlaying, coldStartRestoreSucceeded, coldStartRestoreInFlight, coldRestoreWatchInstalled, coldRestoreRetryTimer, coldRestoreGestureUnlockInstalled;
 var init_playback_runtime = __esm({
-  "src/playback-runtime.ts"() {
+  ".agnx/src/playback-runtime.ts"() {
     init_playback_engine();
     init_playback_leader();
     init_music_autoplay();
     init_music_host();
     init_playback_cold_restore();
+    init_playback_session();
     init_store();
     init_playback_cold_restore();
     uiSinks = /* @__PURE__ */ new Set();
@@ -3130,7 +3316,7 @@ var init_playback_runtime = __esm({
   }
 });
 
-// src/playback-engine.ts
+// .agnx/src/playback-engine.ts
 function readGlobalAudio() {
   const host2 = globalThis;
   return host2[GLOBAL_AUDIO_KEY] ?? null;
@@ -3286,9 +3472,9 @@ function bootMusicPlaybackRuntimeFromEngine() {
   } catch {
   }
 }
-function isMusicPlaybackLiveOnTrack(input) {
+function isMusicPlaybackAttachedOnTrack(input) {
   const { trackId, sourceUri, nowPlayingId, audio } = input;
-  if (!audio || !audio.src || audio.paused) {
+  if (!audio || !audio.src) {
     return false;
   }
   if (trackId !== nowPlayingId) {
@@ -3501,7 +3687,7 @@ function prepareMusicPlaybackSourceChange() {
 }
 var GLOBAL_AUDIO_KEY, GLOBAL_GAIN_KEY, GLOBAL_LOADED_KEY, GLOBAL_MES_BOUND_KEY, BACKGROUND_ACTIVE_KEY, BACKGROUND_LISTENERS_KEY, sharedAudio;
 var init_playback_engine = __esm({
-  "src/playback-engine.ts"() {
+  ".agnx/src/playback-engine.ts"() {
     init_music_ids();
     GLOBAL_AUDIO_KEY = "__agnx_music_playback_audio__";
     GLOBAL_GAIN_KEY = "__agnx_music_playback_gain__";
@@ -3513,7 +3699,7 @@ var init_playback_engine = __esm({
   }
 });
 
-// src/index.ts
+// .agnx/src/index.ts
 var index_exports = {};
 __export(index_exports, {
   MUSIC_APP_ID: () => MUSIC_APP_ID,
@@ -3537,7 +3723,7 @@ init_playback_engine();
 init_playback_runtime();
 init_playback_leader();
 
-// src/player.tsx
+// .agnx/src/player.tsx
 var import_react11 = require("react");
 var import_react_native9 = require("react-native");
 var import_lucide_react_native8 = require("lucide-react-native");
@@ -3545,7 +3731,7 @@ var import_react_native_unistyles7 = require("react-native-unistyles");
 var import_app_sdk = require("@getagnx/app-sdk");
 init_music_ids();
 
-// src/list-contributions.ts
+// .agnx/src/list-contributions.ts
 var import_lucide_react_native2 = require("lucide-react-native");
 init_music_runtime_app_id();
 init_music_ids();
@@ -3601,7 +3787,7 @@ function registerMusicListContributions(host2) {
   });
 }
 
-// src/detail-sheet-fields.tsx
+// .agnx/src/detail-sheet-fields.tsx
 var import_react = require("react");
 var import_react_native = require("react-native");
 var import_react_native_unistyles = require("react-native-unistyles");
@@ -4127,7 +4313,7 @@ var styles = import_react_native_unistyles.StyleSheet.create((theme) => ({
   }
 }));
 
-// src/lyrics.ts
+// .agnx/src/lyrics.ts
 var LRC_LINE_RE = /^\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\](.*)$/;
 var TRAILING_LRC_TIME_RE = /\[\d{1,2}:\d{1,2}(?:\.\d{1,3})?\]\s*$/g;
 var INLINE_LRC_TIME_RE = /\[\d{1,2}:\d{1,2}(?:\.\d{1,3})?\]/g;
@@ -4241,14 +4427,14 @@ function quantizeLyricProgress(progress, steps = 24) {
   return Math.min(1, Math.max(0, Math.round(progress * s) / s));
 }
 
-// src/queue-drawer.tsx
+// .agnx/src/queue-drawer.tsx
 var import_react3 = require("react");
 var import_react_native2 = require("react-native");
 var import_lucide_react_native3 = require("lucide-react-native");
 var import_react_native_unistyles2 = require("react-native-unistyles");
 init_music_host();
 
-// src/queue-scroll.ts
+// .agnx/src/queue-scroll.ts
 var FALLBACK_ROW_HEIGHT = 56;
 function resolveQueueScrollOffset(input) {
   const rowHeight = input.rowHeight > 0 ? input.rowHeight : FALLBACK_ROW_HEIGHT;
@@ -4268,11 +4454,11 @@ function resolveQueueScrollOffset(input) {
   return centered;
 }
 
-// src/queue-drawer.tsx
+// .agnx/src/queue-drawer.tsx
 init_player_action_layout();
 init_track_menu();
 
-// src/track-menu-surfaces.ts
+// .agnx/src/track-menu-surfaces.ts
 var import_react2 = require("react");
 init_music_ids();
 init_player_action_layout();
@@ -4471,7 +4657,7 @@ function useMusicTrackEntityMenuLayout(surfaceId) {
   return { layout, openEditLayout };
 }
 
-// src/queue-drawer.tsx
+// .agnx/src/queue-drawer.tsx
 var import_jsx_runtime2 = require("react/jsx-runtime");
 var DESKTOP_RAIL_WIDTH = 340;
 var FALLBACK_ROW_HEIGHT2 = 56;
@@ -5203,7 +5389,7 @@ var styles2 = import_react_native_unistyles2.StyleSheet.create((theme) => ({
   }
 }));
 
-// src/search-view.tsx
+// .agnx/src/search-view.tsx
 var import_react5 = require("react");
 var import_react_native4 = require("react-native");
 var import_lucide_react_native5 = require("lucide-react-native");
@@ -5211,10 +5397,10 @@ var import_react_native_unistyles4 = require("react-native-unistyles");
 init_cover_url_quality();
 init_platform_registry();
 
-// src/resource/local-provider.ts
+// .agnx/src/resource/local-provider.ts
 init_store();
 
-// src/resource/collection-list-helpers.ts
+// .agnx/src/resource/collection-list-helpers.ts
 function resolveCollectionListTitle(query) {
   const explicit = query.title?.trim() ?? "";
   if (explicit) {
@@ -5326,7 +5512,7 @@ async function listCollectionByNameSearch(provider, query, options) {
   };
 }
 
-// src/resource/local-provider.ts
+// .agnx/src/resource/local-provider.ts
 function emptyPage(query) {
   return {
     query,
@@ -5380,10 +5566,10 @@ var localMusicProvider = {
   }
 };
 
-// src/resource/service.ts
+// .agnx/src/resource/service.ts
 init_platform_registry();
 
-// src/resource/sidecar-fetch.ts
+// .agnx/src/resource/sidecar-fetch.ts
 var fetchJsonImpl = null;
 function setMusicSidecarFetchJson(impl) {
   fetchJsonImpl = impl;
@@ -5420,7 +5606,7 @@ async function fetchMusicSidecarJson(url, init) {
   return body;
 }
 
-// src/resource/aiguo-provider.ts
+// .agnx/src/resource/aiguo-provider.ts
 var PROVIDER_ID = "aiguo";
 var USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 var AIGUO_MIRRORS = [
@@ -5795,7 +5981,7 @@ var aiguoMusicProvider = {
   }
 };
 
-// src/resource/audiocom-provider.ts
+// .agnx/src/resource/audiocom-provider.ts
 init_provider_catalog();
 var AUDIOCOM_PROVIDER_ID = "audiocom";
 var AUDIOCOM_API_ORIGIN = "https://api.audio.com";
@@ -6097,7 +6283,7 @@ var audiocomMusicProvider = {
   }
 };
 
-// src/resource/muzvox-provider.ts
+// .agnx/src/resource/muzvox-provider.ts
 init_provider_catalog();
 var MUZVOX_PROVIDER_ID = "muzvox";
 var MUZVOX_ORIGIN = "https://muzvox.org";
@@ -6378,13 +6564,13 @@ var muzvoxMusicProvider = {
   }
 };
 
-// src/resource/service.ts
+// .agnx/src/resource/service.ts
 init_provider_catalog();
 
-// src/resource/sidecar-provider.ts
+// .agnx/src/resource/sidecar-provider.ts
 init_cover_url_quality();
 
-// src/resource/sidecar-contract.ts
+// .agnx/src/resource/sidecar-contract.ts
 init_platform_registry();
 function buildSidecarCollectionUrl(baseUrl, request) {
   const url = new URL("/api/v1/music/collection", baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
@@ -6462,7 +6648,7 @@ function buildSidecarResolveRequest(ref) {
   };
 }
 
-// src/resource/sidecar-config.ts
+// .agnx/src/resource/sidecar-config.ts
 var DEV_PROBE_BASE_URL = "http://127.0.0.1:8080";
 var DEV_PROBE_RETRY_MS = 15e3;
 var discoveredDevBaseUrl;
@@ -6502,7 +6688,7 @@ async function getMusicSidecarBaseUrl() {
   return discoveredDevBaseUrl;
 }
 
-// src/resource/sidecar-provider.ts
+// .agnx/src/resource/sidecar-provider.ts
 function emptyPage5(query) {
   return {
     query,
@@ -6933,11 +7119,11 @@ var sidecarMusicProvider = {
   }
 };
 
-// src/resource/txqq-provider.ts
+// .agnx/src/resource/txqq-provider.ts
 init_cover_url_quality();
 init_platform_registry();
 
-// src/resource/search-debug-urls.ts
+// .agnx/src/resource/search-debug-urls.ts
 function buildPixabayMusicSearchUrl(keyword, page = 1) {
   const base = `https://pixabay.com/zh/music/search/${encodeURIComponent(keyword.trim() || "lofi")}/`;
   return page > 1 ? `${base}?pagi=${page}` : base;
@@ -6977,7 +7163,7 @@ function mergeSearchDebugRequests(...groups) {
   return merged;
 }
 
-// src/resource/txqq-provider.ts
+// .agnx/src/resource/txqq-provider.ts
 var AGGREGATOR_ENDPOINTS = ["https://music.txqq.pro/", "https://music.itzo.cn/"];
 var aggregatorEndpointCursor = 0;
 function aggregatorOrigin(endpoint) {
@@ -7302,7 +7488,7 @@ async function findTxqqLyricsText(input) {
   return null;
 }
 
-// src/resource/host-media.ts
+// .agnx/src/resource/host-media.ts
 var createMediaProxyUrlImpl = null;
 var captureBrowserMediaImpl = null;
 function setMusicHostMediaApis(input) {
@@ -7337,7 +7523,7 @@ function hasMusicBrowserCapture() {
   return captureBrowserMediaImpl != null;
 }
 
-// src/resource/web-browser-provider.ts
+// .agnx/src/resource/web-browser-provider.ts
 function emptyPage7(query, error, providerId, debugSearchRequests) {
   return {
     query,
@@ -7647,7 +7833,7 @@ var soundstripeMusicProvider = {
   }
 };
 
-// src/resource/playable-filter.ts
+// .agnx/src/resource/playable-filter.ts
 var PLAYABLE_VERIFY_CONCURRENCY = 4;
 var PLAYABLE_CANDIDATES_PER_PLATFORM = 6;
 var MAX_PLAYABLE_SEARCH_RESULTS = 24;
@@ -7716,7 +7902,7 @@ async function verifyPlayableTracks(tracks, resolvePlayable) {
   };
 }
 
-// src/resource/service.ts
+// .agnx/src/resource/service.ts
 var providers = [
   localMusicProvider,
   txqqMusicProvider,
@@ -7965,7 +8151,7 @@ async function fetchMusicLyrics(ref) {
   return null;
 }
 
-// src/resource/search-page-merge.ts
+// .agnx/src/resource/search-page-merge.ts
 function refKey(providerId, remoteId) {
   return `${providerId.trim()}:${remoteId.trim()}`;
 }
@@ -8038,10 +8224,10 @@ function mergeSearchResultPages(current, more, nextPageNum) {
   };
 }
 
-// src/search-view.tsx
+// .agnx/src/search-view.tsx
 init_search_result_cache();
 
-// src/resource/collection-resolve.ts
+// .agnx/src/resource/collection-resolve.ts
 function isDerivedCollectionRemoteId(remoteId) {
   return remoteId.startsWith("artist:") || remoteId.startsWith("album:");
 }
@@ -8090,12 +8276,12 @@ function collectionTrackCountSuffix(source) {
   return "";
 }
 
-// src/provider-icons.tsx
+// .agnx/src/provider-icons.tsx
 var import_react_native3 = require("react-native");
 var import_lucide_react_native4 = require("lucide-react-native");
 var import_react_native_unistyles3 = require("react-native-unistyles");
 
-// src/provider-icon-assets.ts
+// .agnx/src/provider-icon-assets.ts
 function pngDataUri(b64) {
   return { uri: `data:image/png;base64,${b64}` };
 }
@@ -8135,7 +8321,7 @@ var LOCAL_PROVIDER_ICON_SOURCES = {
   )
 };
 
-// src/provider-icons.tsx
+// .agnx/src/provider-icons.tsx
 var import_jsx_runtime3 = require("react/jsx-runtime");
 function LocalIcon(props) {
   const { theme } = (0, import_react_native_unistyles3.useUnistyles)();
@@ -8195,11 +8381,11 @@ var styles3 = import_react_native3.StyleSheet.create({
   }
 });
 
-// src/search-view.tsx
+// .agnx/src/search-view.tsx
 init_store();
 init_music_host();
 
-// src/search-menu-surfaces.ts
+// .agnx/src/search-menu-surfaces.ts
 var import_react4 = require("react");
 init_music_ids();
 init_music_host();
@@ -8339,7 +8525,7 @@ function useMusicSearchCollectionMenuLayout() {
   return useMusicSearchMenuLayout("collection");
 }
 
-// src/search-view.tsx
+// .agnx/src/search-view.tsx
 init_music_ids();
 init_track_menu();
 var import_jsx_runtime4 = require("react/jsx-runtime");
@@ -10604,7 +10790,7 @@ var styles4 = import_react_native_unistyles4.StyleSheet.create((theme) => ({
   }
 }));
 
-// src/transport-controls.tsx
+// .agnx/src/transport-controls.tsx
 var import_lucide_react_native6 = require("lucide-react-native");
 var import_jsx_runtime5 = require("react/jsx-runtime");
 function TransportModeControl(props) {
@@ -10658,13 +10844,13 @@ function TransportQueueControl(props) {
   );
 }
 
-// src/track-identity.tsx
+// .agnx/src/track-identity.tsx
 var import_react7 = require("react");
 var import_react_native6 = require("react-native");
 var import_react_native_unistyles6 = require("react-native-unistyles");
 init_cover_url_quality();
 
-// src/marquee-text.tsx
+// .agnx/src/marquee-text.tsx
 var import_react6 = require("react");
 var import_react_native5 = require("react-native");
 var import_react_native_unistyles5 = require("react-native-unistyles");
@@ -11066,7 +11252,7 @@ var styles5 = import_react_native_unistyles5.StyleSheet.create({
   }
 });
 
-// src/track-identity.tsx
+// .agnx/src/track-identity.tsx
 var import_jsx_runtime7 = require("react/jsx-runtime");
 function displayUriForCoverSize(size, displayUri) {
   if (!displayUri) {
@@ -11323,13 +11509,13 @@ var styles6 = import_react_native_unistyles6.StyleSheet.create((theme) => ({
   }
 }));
 
-// src/player.tsx
+// .agnx/src/player.tsx
 init_cover_url_quality();
 
-// src/sync-content-backdrop.ts
+// .agnx/src/sync-content-backdrop.ts
 init_music_ids();
 
-// src/resolve-cover-backdrop-uri.ts
+// .agnx/src/resolve-cover-backdrop-uri.ts
 init_cover_url_quality();
 function isDirectImageUri(uri) {
   return /^https?:\/\//.test(uri) || uri.startsWith("data:") || uri.startsWith("blob:");
@@ -11359,7 +11545,7 @@ async function resolveMusicCoverBackdropImageUri(input) {
   return null;
 }
 
-// src/sync-content-backdrop.ts
+// .agnx/src/sync-content-backdrop.ts
 init_store();
 async function syncMusicContentBackdropToHost(hostApi2, options) {
   const sourceId = MUSIC_APP_ID;
@@ -11398,12 +11584,12 @@ async function syncMusicContentBackdropToHost(hostApi2, options) {
   });
 }
 
-// src/player.tsx
+// .agnx/src/player.tsx
 init_player_action_layout();
 init_track_menu();
 init_store();
 
-// src/music-tab-icon.tsx
+// .agnx/src/music-tab-icon.tsx
 var import_react8 = require("react");
 var import_react_native7 = require("react-native");
 var import_lucide_react_native7 = require("lucide-react-native");
@@ -11486,7 +11672,7 @@ function MusicTabIcon(props) {
   return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(import_lucide_react_native7.Music2, { size, color, strokeWidth: 2 });
 }
 
-// src/extract-cover-atmosphere.ts
+// .agnx/src/extract-cover-atmosphere.ts
 var ATMOSPHERE_EXTRACT_VERSION = 3;
 function clampByte(value) {
   return Math.max(0, Math.min(255, Math.round(value)));
@@ -11782,7 +11968,7 @@ async function ensureTrackAtmospherePalette(input) {
   return palette;
 }
 
-// src/resolve-desktop-stage-split.ts
+// .agnx/src/resolve-desktop-stage-split.ts
 var DESKTOP_COVER_COLUMN_PX = 320;
 function estimateLyricContentWidthPx(text, fontSizePx) {
   const size = Math.max(1, fontSizePx);
@@ -11846,10 +12032,11 @@ function resolveDesktopStageSplit(input) {
   };
 }
 
-// src/player.tsx
+// .agnx/src/player.tsx
 init_music_autoplay();
+init_playback_session();
 
-// src/host-feedback.ts
+// .agnx/src/host-feedback.ts
 init_music_ids();
 init_music_host();
 function formatSuccessMessage(input) {
@@ -11915,7 +12102,7 @@ function notifyMusicPlayerToast(message) {
   });
 }
 
-// src/resource/download-bundle.ts
+// .agnx/src/resource/download-bundle.ts
 init_music_ids();
 init_store();
 init_cover_url_quality();
@@ -12244,7 +12431,7 @@ async function downloadAndPersistTrackBundle(hostApi2, trackId, options) {
   );
 }
 
-// src/resource/track-files.ts
+// .agnx/src/resource/track-files.ts
 init_music_ids();
 init_store();
 function extensionOfUri(uri, fallback) {
@@ -12328,7 +12515,7 @@ async function deleteMusicTrackCompletely(hostApi2, trackId) {
   return useMusicDemoStore.getState().deleteTrack(trackId);
 }
 
-// src/resource/refresh-resources.ts
+// .agnx/src/resource/refresh-resources.ts
 init_store();
 init_provider_catalog();
 function isStockBrowserProvider(providerId) {
@@ -12421,11 +12608,11 @@ async function refreshTrackResourcesAndMaybePersist(hostApi2, trackId, _options)
   };
 }
 
-// src/track-menu-run.ts
+// .agnx/src/track-menu-run.ts
 init_music_autoplay();
 init_store();
 
-// src/track-detail.tsx
+// .agnx/src/track-detail.tsx
 init_music_ids();
 init_platform_registry();
 init_store();
@@ -12546,7 +12733,7 @@ async function openMusicTrackDetailSheet(hostApi2, _trackId) {
   });
 }
 
-// src/track-menu-run.ts
+// .agnx/src/track-menu-run.ts
 async function runMusicTrackMenuAction(input) {
   const trackId = input.trackId.trim();
   if (!trackId) {
@@ -12622,7 +12809,7 @@ async function runMusicTrackMenuAction(input) {
   }
 }
 
-// src/resource/cloud-playback.ts
+// .agnx/src/resource/cloud-playback.ts
 init_playback_engine();
 var PROVIDER_PRIORITY = [
   "qq",
@@ -12731,10 +12918,10 @@ async function findCloudPlayableAlternates(input) {
   return result;
 }
 
-// src/player.tsx
+// .agnx/src/player.tsx
 init_provider_catalog();
 
-// src/resource/ui-smoke.ts
+// .agnx/src/resource/ui-smoke.ts
 init_music_ids();
 init_store();
 var MUSIC_UI_SMOKE_REQUEST_KEY = "ui-smoke-request";
@@ -12871,11 +13058,11 @@ function startMusicUiSmokeWatcher(hostApi2) {
   };
 }
 
-// src/player.tsx
+// .agnx/src/player.tsx
 init_playback_engine();
 init_playback_runtime();
 
-// src/playback-ui-clock.ts
+// .agnx/src/playback-ui-clock.ts
 var MUSIC_PLAYBACK_UI_MIN_INTERVAL_MS = 200;
 function shouldCommitPlaybackUiTime(input) {
   if (input.force) {
@@ -12888,7 +13075,7 @@ function shouldCommitPlaybackUiTime(input) {
   return { commit: false };
 }
 
-// src/playback-ui-time-store.ts
+// .agnx/src/playback-ui-time-store.ts
 var timeSec = 0;
 var pendingTimeSec = 0;
 var lastCommitMs = 0;
@@ -12942,11 +13129,11 @@ function publishPlaybackUiTime(time, force = false) {
   }, MUSIC_PLAYBACK_UI_MIN_INTERVAL_MS);
 }
 
-// src/music-lyrics-karaoke.tsx
+// .agnx/src/music-lyrics-karaoke.tsx
 var import_react10 = require("react");
 var import_react_native8 = require("react-native");
 
-// src/use-playback-ui-time.ts
+// .agnx/src/use-playback-ui-time.ts
 var import_react9 = require("react");
 function usePlaybackUiTime() {
   return (0, import_react9.useSyncExternalStore)(subscribePlaybackUiTime, getPlaybackUiTime, getPlaybackUiTime);
@@ -12982,7 +13169,7 @@ function usePlaybackLyricHighlight(input) {
   );
 }
 
-// src/music-lyrics-karaoke.tsx
+// .agnx/src/music-lyrics-karaoke.tsx
 var import_jsx_runtime10 = require("react/jsx-runtime");
 var KARAOKE_STYLE_ID = "agnx-music-lyric-karaoke-v8";
 var LEGACY_KARAOKE_STYLE_IDS = [
@@ -13290,10 +13477,10 @@ function MusicLyricPlainActiveText(props) {
   );
 }
 
-// src/player.tsx
+// .agnx/src/player.tsx
 init_music_host();
 
-// src/perf-self-report.ts
+// .agnx/src/perf-self-report.ts
 init_music_ids();
 init_music_host();
 init_store();
@@ -13403,7 +13590,7 @@ function stopMusicPerfSelfReport() {
   stopHandle = null;
 }
 
-// src/music-player-shortcuts.ts
+// .agnx/src/music-player-shortcuts.ts
 init_music_ids();
 var MUSIC_PLAYER_SHORTCUT_SLOTS = [
   {
@@ -13598,7 +13785,7 @@ function registerMusicPlayerShortcuts(host2) {
   }
 }
 
-// src/player.tsx
+// .agnx/src/player.tsx
 var import_jsx_runtime11 = require("react/jsx-runtime");
 var MINI_APP_PANE_INTERACTIVE_EVENT = "agnx-mini-app-pane-interactive";
 var MUSIC_LYRICS_FOLLOW_ACTIVE_COLOR = "#60A5FA";
@@ -14842,9 +15029,22 @@ function MusicPlayerContent(props) {
     }
     const shouldResume = resumeAfterLoadRef.current || takePendingAutoPlayTrackId(track.id) || useMusicDemoStore.getState().wantsPlaying && track.id === useMusicDemoStore.getState().nowPlayingId;
     const switchingTrack = loadedTrackIdRef.current != null && loadedTrackIdRef.current !== track.id;
-    const resumeAt = switchingTrack ? 0 : track.id === useMusicDemoStore.getState().nowPlayingId ? useMusicDemoStore.getState().playbackPositionSec : 0;
+    const sessionSnap = readMusicPlaybackSessionSnapshotSync();
+    const sessionPos = sessionSnap && sessionSnap.nowPlayingId === track.id ? sessionSnap.playbackPositionSec : 0;
+    const resumeAt = resolveMusicResumePositionSec({
+      switchingTrack,
+      nowPlayingMatches: track.id === useMusicDemoStore.getState().nowPlayingId,
+      storePositionSec: Math.max(
+        useMusicDemoStore.getState().playbackPositionSec,
+        sessionPos
+      ),
+      audioCurrentTimeSec: audio.currentTime || 0
+    });
+    if (!switchingTrack && resumeAt > useMusicDemoStore.getState().playbackPositionSec) {
+      useMusicDemoStore.getState().setPlaybackPosition(resumeAt);
+    }
     resumeAfterLoadRef.current = false;
-    const alreadyLiveOnSameTrack = isMusicPlaybackLiveOnTrack({
+    const attachedOnSameTrack = isMusicPlaybackAttachedOnTrack({
       trackId: track.id,
       sourceUri: track.sourceUri,
       nowPlayingId: useMusicDemoStore.getState().nowPlayingId,
@@ -14852,13 +15052,13 @@ function MusicPlayerContent(props) {
       loadedTrackId: loadedTrackIdRef.current,
       loadedSourceUri: loadedSourceUriRef.current
     });
-    if (alreadyLiveOnSameTrack) {
+    if (attachedOnSameTrack) {
       loadedTrackIdRef.current = track.id;
       loadedSourceUriRef.current = track.sourceUri;
       setMusicPlaybackLoadedMeta({ trackId: track.id, sourceUri: track.sourceUri });
-      setPlaying(!audio.paused);
-      setStreamResolving(false);
-      commitPlaybackUiTime(audio.currentTime || 0, true);
+      syncMusicPlaybackPositionToStore(true);
+      const liveAt = Math.max(0, audio.currentTime || resumeAt || 0);
+      commitPlaybackUiTime(liveAt, true);
       const liveDuration = readMusicPlaybackDurationSec(audio);
       setDuration(liveDuration);
       if (!(liveDuration > 0)) {
@@ -14882,6 +15082,25 @@ function MusicPlayerContent(props) {
       }
       if (playingFromLocalDisk2) {
         setBufferedProgress(1);
+      }
+      setStreamResolving(false);
+      if (shouldResume && audio.paused) {
+        void safeMusicPlay(audio).then((ok) => {
+          if (cancelled || useMusicDemoStore.getState().nowPlayingId !== track.id) {
+            return void 0;
+          }
+          if (ok) {
+            setPlaying(true);
+            setWantsPlaying(true);
+          } else {
+            setPlaying(false);
+            setWantsPlaying(true);
+            void maybeRestoreMusicPlaybackAfterColdStart();
+          }
+          return void 0;
+        });
+      } else {
+        setPlaying(!audio.paused);
       }
       return () => {
         cancelled = true;
@@ -14986,16 +15205,56 @@ function MusicPlayerContent(props) {
         }
         const loadedMeta = getMusicPlaybackLoadedMeta();
         const sameSrc = Boolean(audio.src) && (audio.src === uri || objectUrlRef.current === uri) && (loadedTrackIdRef.current === track.id || loadedMeta?.trackId === track.id);
-        if (!audio.paused && sameSrc && shouldResume) {
+        if (sameSrc) {
           loadedTrackIdRef.current = track.id;
           loadedSourceUriRef.current = rawUri;
           setMusicPlaybackLoadedMeta({ trackId: track.id, sourceUri: rawUri });
-          setPlaying(true);
-          setStreamResolving(false);
-          commitPlaybackUiTime(audio.currentTime || 0, true);
+          syncMusicPlaybackPositionToStore(true);
+          commitPlaybackUiTime(audio.currentTime || resumeAt || 0, true);
           setDuration(readMusicPlaybackDurationSec(audio));
+          if (shouldResume) {
+            if (!audio.paused) {
+              setPlaying(true);
+              setStreamResolving(false);
+              return;
+            }
+            const started = await safeMusicPlay(audio);
+            if (cancelled || useMusicDemoStore.getState().nowPlayingId !== track.id) {
+              return;
+            }
+            if (started) {
+              setPlaying(true);
+              setWantsPlaying(true);
+              setStreamResolving(false);
+            } else {
+              setPlaying(false);
+              setWantsPlaying(true);
+              setStreamResolving(false);
+              void maybeRestoreMusicPlaybackAfterColdStart();
+            }
+            return;
+          }
+          setPlaying(false);
+          setStreamResolving(false);
           return;
         }
+        if (!switchingTrack && track.id === useMusicDemoStore.getState().nowPlayingId) {
+          const liveSec = Math.max(
+            0,
+            Math.floor(audio.currentTime || 0),
+            useMusicDemoStore.getState().playbackPositionSec,
+            resumeAt
+          );
+          if (liveSec > useMusicDemoStore.getState().playbackPositionSec) {
+            useMusicDemoStore.getState().setPlaybackPosition(liveSec);
+          }
+        }
+        const seekTo = resolveMusicResumePositionSec({
+          switchingTrack,
+          nowPlayingMatches: track.id === useMusicDemoStore.getState().nowPlayingId,
+          storePositionSec: useMusicDemoStore.getState().playbackPositionSec,
+          audioCurrentTimeSec: audio.currentTime || 0
+        });
         if (objectUrlRef.current?.startsWith("blob:") && objectUrlRef.current !== uri) {
           URL.revokeObjectURL(objectUrlRef.current);
         }
@@ -15017,9 +15276,9 @@ function MusicPlayerContent(props) {
         if (durationSec > 0) {
           setDuration(durationSec);
         }
-        if (resumeAt > 0) {
+        if (seekTo > 0) {
           try {
-            playbackAudio.currentTime = durationSec > 0 ? Math.min(resumeAt, Math.max(0, durationSec - 0.05)) : resumeAt;
+            playbackAudio.currentTime = durationSec > 0 ? Math.min(seekTo, Math.max(0, durationSec - 0.05)) : seekTo;
           } catch {
           }
         }
@@ -18362,10 +18621,18 @@ var styles7 = import_react_native_unistyles7.StyleSheet.create((theme) => ({
     color: theme.colors.foreground
   }
 }));
-function openMusicPlayerTab(track, context) {
+function openMusicPlayerTab(track, context, options) {
   if (track) {
-    requestTrackAutoPlay(track.id);
-    useMusicDemoStore.getState().setNowPlaying(track.id);
+    const state = useMusicDemoStore.getState();
+    state.setNowPlaying(track.id);
+    if (shouldRequestAutoPlayOnOpenPlayer({
+      explicitAutoPlay: options?.autoPlay,
+      wantsPlaying: state.wantsPlaying
+    })) {
+      requestTrackAutoPlay(track.id);
+    } else {
+      clearPendingTrackAutoPlay();
+    }
   }
   return host().openMiniAppTab({
     appId: MUSIC_APP_ID,
@@ -18397,7 +18664,7 @@ async function uploadAndOpenTracks(context) {
   );
   const first = created[0];
   if (first) {
-    openMusicPlayerTab(first, context);
+    openMusicPlayerTab(first, context, { autoPlay: true });
   }
   return created;
 }
@@ -18635,10 +18902,10 @@ function registerMusicApp(nextHost) {
   });
 }
 
-// src/agent-tools.ts
+// .agnx/src/agent-tools.ts
 init_music_ids();
 
-// src/agent-play-query.ts
+// .agnx/src/agent-play-query.ts
 init_store();
 init_playback_runtime();
 function normalizeQuery(raw) {
@@ -19066,7 +19333,7 @@ async function playMusicByQuery(input) {
   });
 }
 
-// src/agent-tools.ts
+// .agnx/src/agent-tools.ts
 init_playback_engine();
 init_playback_runtime();
 init_platform_registry();
@@ -19858,7 +20125,7 @@ function registerMusicAgentTools(host2) {
   });
 }
 
-// src/index.ts
+// .agnx/src/index.ts
 init_music_host();
 init_store();
 init_music_ids();

@@ -233,8 +233,8 @@ function bootMusicPlaybackRuntimeFromEngine(): void {
   }
 }
 
-/** 同曲同源且单例仍在播 → 禁止 remount 后重新 load。 */
-export function isMusicPlaybackLiveOnTrack(input: {
+/** 同曲同源且单例已挂好 src（可暂停）→ remount 禁止 hard-load 归零。 */
+export function isMusicPlaybackAttachedOnTrack(input: {
   trackId: string;
   sourceUri: string;
   nowPlayingId: string | null;
@@ -243,14 +243,14 @@ export function isMusicPlaybackLiveOnTrack(input: {
   loadedSourceUri: string | null;
 }): boolean {
   const { trackId, sourceUri, nowPlayingId, audio } = input;
-  if (!audio || !audio.src || audio.paused) {
+  if (!audio || !audio.src) {
     return false;
   }
   if (trackId !== nowPlayingId) {
     return false;
   }
   const meta = getMusicPlaybackLoadedMeta();
-  // 同曲换源（云→本地）必须走软切，不能当成 live remount。
+  // 同曲换源（云→本地）必须走软切，不能当成 attached remount。
   if (meta?.trackId === trackId && meta.sourceUri !== sourceUri) {
     return false;
   }
@@ -266,9 +266,24 @@ export function isMusicPlaybackLiveOnTrack(input: {
   if (sameTrack && sameSource) {
     return true;
   }
-  // Cold remount：refs/meta 皆空，但单例仍在播当前 nowPlaying → 禁止 hard-load。
+  // Cold remount：refs/meta 皆空，但单例仍挂着当前 nowPlaying 的源 → 禁止 hard-load。
   // 切曲时 loadedTrackId 通常仍指向旧曲，不得走此分支。
   return input.loadedTrackId == null && meta == null;
+}
+
+/** 同曲同源且单例仍在播 → 禁止 remount 后重新 load。 */
+export function isMusicPlaybackLiveOnTrack(input: {
+  trackId: string;
+  sourceUri: string;
+  nowPlayingId: string | null;
+  audio: HTMLAudioElement | null;
+  loadedTrackId: string | null;
+  loadedSourceUri: string | null;
+}): boolean {
+  if (!input.audio || input.audio.paused) {
+    return false;
+  }
+  return isMusicPlaybackAttachedOnTrack(input);
 }
 
 /** 可读的总时长（秒）；NaN/Infinity/未就绪 → 0。 */

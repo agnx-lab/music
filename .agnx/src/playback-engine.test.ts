@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   isCrossOriginHttpMusicSrc,
   isMusicAutoplayBlockedError,
+  isMusicPlaybackAttachedOnTrack,
   isMusicPlaybackLiveOnTrack,
   isMusicPlayInterruptedError,
   readMusicPlaybackDurationSec,
@@ -77,6 +78,38 @@ describe("isMusicPlaybackLiveOnTrack", () => {
         audio: mockAudio({ src: "blob:http://localhost/a", paused: false }),
         loadedTrackId: "t1",
         loadedSourceUri: "file://local/a.mp3",
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("isMusicPlaybackAttachedOnTrack", () => {
+  afterEach(() => {
+    setMusicPlaybackLoadedMeta(null);
+    setMusicPlaybackBackgroundActive(false);
+  });
+
+  it("returns true when paused on the same track so remount does not hard-load from zero", () => {
+    setMusicPlaybackLoadedMeta({ trackId: "t1", sourceUri: "file://local/a.mp3" });
+
+    expect(
+      isMusicPlaybackAttachedOnTrack({
+        trackId: "t1",
+        sourceUri: "file://local/a.mp3",
+        nowPlayingId: "t1",
+        audio: mockAudio({ src: "blob:http://localhost/a", paused: true }),
+        loadedTrackId: null,
+        loadedSourceUri: null,
+      }),
+    ).toBe(true);
+    expect(
+      isMusicPlaybackLiveOnTrack({
+        trackId: "t1",
+        sourceUri: "file://local/a.mp3",
+        nowPlayingId: "t1",
+        audio: mockAudio({ src: "blob:http://localhost/a", paused: true }),
+        loadedTrackId: null,
+        loadedSourceUri: null,
       }),
     ).toBe(false);
   });

@@ -11,6 +11,12 @@ import { publishMusicPlaybackFocusClaim } from "./playback-leader";
 import { requestTrackAutoPlay } from "./music-autoplay";
 import { getMusicHostApi } from "./music-host";
 import { shouldRestoreMusicPlaybackAfterColdStart } from "./playback-cold-restore";
+import {
+  buildMusicPlaybackSessionSnapshot,
+  readMusicPlaybackSessionSnapshotSync,
+  resolveMusicPlaybackSessionMerge,
+  writeMusicPlaybackSessionSnapshotSync,
+} from "./playback-session";
 import { getMusicBoundSync, useMusicDemoStore } from "./store";
 
 export { shouldRestoreMusicPlaybackAfterColdStart } from "./playback-cold-restore";
@@ -46,7 +52,8 @@ function notifyTime(currentTime: number): void {
 
 /**
  * 把 audio 进度写回 store（会触发 zustand persist 全量序列化）。
- * 播放中的 timeupdate 禁止走这里；仅 pause / seek / 切歌 / 隐藏窗口 / ended 等边界事件调用。
+ * 播放中的 timeupdate 禁止每拍走这里；仅 pause / seek / 切歌 / 隐藏窗口 / ended / 节流快照 等调用。
+ * 同时同步写 localStorage 播放会话块，供硬刷新原子恢复。
  */
 export function syncMusicPlaybackPositionToStore(force = false): void {
   const audio = getMusicPlaybackAudio();
@@ -59,9 +66,87 @@ export function syncMusicPlaybackPositionToStore(force = false): void {
   }
   const second = Math.max(0, Math.floor(audio.currentTime || 0));
   if (!force && state.playbackPositionSec === second) {
+    writeLiveMusicPlaybackSessionSnapshot(second);
     return;
   }
   state.setPlaybackPosition(second);
+  writeLiveMusicPlaybackSessionSnapshot(second);
+}
+
+/** 边界/pagehide：整块会话写入同步 localStorage（不依赖 AsyncStorage 是否写完）。 */
+export function flushMusicPlaybackSessionSnapshot(): void {
+  const audio = getMusicPlaybackAudio();
+  const state = useMusicDemoStore.getState();
+  const liveSec =
+    audio && Number.isFinite(audio.currentTime) ? Math.max(0, Math.floor(audio.currentTime)) : 0;
+  const livePlaying = Boolean(audio && audio.src && !audio.paused);
+  // 刷新瞬间 store.wantsPlaying 可能滞后；以真实出声为准，避免会话块写成「暂停+进度」。
+  if (livePlaying && !state.wantsPlaying) {
+    state.setWantsPlaying(true);
+  }
+  if (state.nowPlayingId && liveSec > state.playbackPositionSec) {
+    state.setPlaybackPosition(liveSec);
+  }
+  const latest = useMusicDemoStore.getState();
+  writeMusicPlaybackSessionSnapshotSync(
+    buildMusicPlaybackSessionSnapshot({
+      nowPlayingId: latest.nowPlayingId,
+      wantsPlaying: latest.wantsPlaying || livePlaying,
+      playbackPositionSec: Math.max(latest.playbackPositionSec, liveSec),
+      audioCurrentTimeSec: liveSec,
+    }),
+  );
+}
+
+function writeLiveMusicPlaybackSessionSnapshot(positionSec: number): void {
+  const state = useMusicDemoStore.getState();
+  const audio = getMusicPlaybackAudio();
+  const livePlaying = Boolean(audio && audio.src && !audio.paused);
+  const existing = readMusicPlaybackSessionSnapshotSync();
+  let pos = Math.max(0, Math.floor(positionSec));
+  // 刷新后 audio 尚在 0、seek 未完成时，禁止用更小进度冲掉会话块。
+  if (
+    existing &&
+    existing.nowPlayingId &&
+    existing.nowPlayingId === state.nowPlayingId &&
+    existing.playbackPositionSec > pos
+  ) {
+    pos = existing.playbackPositionSec;
+  }
+  writeMusicPlaybackSessionSnapshotSync(
+    buildMusicPlaybackSessionSnapshot({
+      nowPlayingId: state.nowPlayingId,
+      wantsPlaying: state.wantsPlaying || livePlaying,
+      playbackPositionSec: pos,
+    }),
+  );
+}
+
+/** 水合后把同步会话块合并进 store（进度取大；意图以快照为准）。 */
+export function applyMusicPlaybackSessionSnapshotAfterHydrate(): boolean {
+  const state = useMusicDemoStore.getState();
+  const merged = resolveMusicPlaybackSessionMerge({
+    storeNowPlayingId: state.nowPlayingId,
+    storeWantsPlaying: state.wantsPlaying,
+    storePlaybackPositionSec: state.playbackPositionSec,
+    snapshot: readMusicPlaybackSessionSnapshotSync(),
+  });
+  if (!merged.apply) {
+    return false;
+  }
+  if (
+    merged.playbackPositionSec === state.playbackPositionSec &&
+    merged.wantsPlaying === state.wantsPlaying
+  ) {
+    return false;
+  }
+  if (merged.playbackPositionSec !== state.playbackPositionSec) {
+    state.setPlaybackPosition(merged.playbackPositionSec);
+  }
+  if (merged.wantsPlaying !== state.wantsPlaying) {
+    state.setWantsPlaying(merged.wantsPlaying);
+  }
+  return true;
 }
 
 function installPlaybackPositionLifecycleFlush(): void {
@@ -76,7 +161,7 @@ function installPlaybackPositionLifecycleFlush(): void {
   }
   bag.__agnxMusicPositionLifecycleInstalled = true;
   const flush = () => {
-    syncMusicPlaybackPositionToStore(true);
+    flushMusicPlaybackSessionSnapshot();
   };
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
@@ -84,6 +169,7 @@ function installPlaybackPositionLifecycleFlush(): void {
     }
   });
   window.addEventListener("pagehide", flush);
+  window.addEventListener("beforeunload", flush);
 }
 
 let wantsPlayingBridgeInstalled = false;
@@ -109,6 +195,8 @@ export async function applyMusicPlaybackIntent(wantsPlaying: boolean): Promise<{
     store.setWantsPlaying(next);
   }
   const applied = await syncWantsPlayingToAudio(next);
+  // 意图变更也刷同步会话块（暂停/起播），与进度同块。
+  flushMusicPlaybackSessionSnapshot();
   const audio = getMusicPlaybackAudio();
   return {
     wantsPlaying: useMusicDemoStore.getState().wantsPlaying,
@@ -374,6 +462,8 @@ export async function maybeRestoreMusicPlaybackAfterColdStart(): Promise<boolean
   if (typeof Audio === "undefined") {
     return false;
   }
+  // 先吃同步会话块，避免水合竞态下用 AsyncStorage 里的旧进度 0 起播。
+  applyMusicPlaybackSessionSnapshotAfterHydrate();
   const state = useMusicDemoStore.getState();
   ensureMusicPlaybackRuntime();
   const audio = getMusicPlaybackAudio();
@@ -394,10 +484,16 @@ export async function maybeRestoreMusicPlaybackAfterColdStart(): Promise<boolean
       coldStartRestoreSucceeded = true;
       return true;
     }
+    const latest = useMusicDemoStore.getState();
+    const session = readMusicPlaybackSessionSnapshotSync();
+    const seekSec =
+      session && session.nowPlayingId === target.trackId
+        ? Math.max(latest.playbackPositionSec, session.playbackPositionSec)
+        : latest.playbackPositionSec;
     const started = await loadAndPlayTrackUriHeadless({
       trackId: target.trackId,
       sourceUri: target.sourceUri,
-      seekSec: state.playbackPositionSec,
+      seekSec,
     });
     if (started) {
       coldStartRestoreSucceeded = true;
@@ -463,8 +559,22 @@ function handleTimeUpdate(): void {
   if (!audio) {
     return;
   }
-  // UI 进度走 8Hz 外部时钟；store/persist 只在边界事件同步，见 syncMusicPlaybackPositionToStore。
+  // UI 进度走 8Hz 外部时钟；store/persist 不全量每秒写。
   notifyTime(audio.currentTime || 0);
+  // 播放中每 ≥5s 同步写 localStorage 会话块（不触发整库 AsyncStorage），缩小硬刷新丢进度窗口。
+  if (audio.paused || !useMusicDemoStore.getState().nowPlayingId) {
+    return;
+  }
+  const sec = Math.max(0, Math.floor(audio.currentTime || 0));
+  const bag = globalThis as typeof globalThis & {
+    __agnxMusicSessionThrottleSec?: number;
+  };
+  // 初始 0：约每 5 秒写一次（5/10/15…），避免 last=-1 时在第 4 秒就写完再空等。
+  const last = bag.__agnxMusicSessionThrottleSec ?? 0;
+  if (sec > 0 && sec - last >= 5) {
+    bag.__agnxMusicSessionThrottleSec = sec;
+    writeLiveMusicPlaybackSessionSnapshot(sec);
+  }
 }
 
 /** 安装一次常驻监听；若 Audio 单例被替换则重新绑定。播放器卸载不得 remove。 */

@@ -1864,6 +1864,9 @@ export function bindMusicHostStorage(
       searchProviderIds: legacyState?.searchProviderIds,
     });
     applyMusicAppPrefsToStore(prefs);
+    // 同步会话块立刻合并进 store（勿丢进 finally 里异步 import，否则播放器会先按进度 0 hard-load）。
+    const playbackRuntime = await import("./playback-runtime");
+    playbackRuntime.applyMusicPlaybackSessionSnapshotAfterHydrate();
   })().finally(() => {
     hostHydrationCompleted = true;
     notifyMusicHostHydrationListeners();
