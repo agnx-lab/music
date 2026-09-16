@@ -29,16 +29,16 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// .agnx/src/music-ids.ts
+// src/music-ids.ts
 var MUSIC_APP_ID, MUSIC_LEGACY_APP_ID;
 var init_music_ids = __esm({
-  ".agnx/src/music-ids.ts"() {
+  "src/music-ids.ts"() {
     MUSIC_APP_ID = "music";
     MUSIC_LEGACY_APP_ID = "com.example.music";
   }
 });
 
-// .agnx/src/music-runtime-app-id.ts
+// src/music-runtime-app-id.ts
 function setMusicRuntimeAppId(appId2) {
   const trimmed = appId2.trim();
   runtimeAppId = trimmed || MUSIC_APP_ID;
@@ -61,13 +61,13 @@ function getMusicLegacyStorageAppId() {
 }
 var runtimeAppId;
 var init_music_runtime_app_id = __esm({
-  ".agnx/src/music-runtime-app-id.ts"() {
+  "src/music-runtime-app-id.ts"() {
     init_music_ids();
     runtimeAppId = MUSIC_APP_ID;
   }
 });
 
-// .agnx/src/music-host.ts
+// src/music-host.ts
 var music_host_exports = {};
 __export(music_host_exports, {
   getMusicHostApi: () => getMusicHostApi,
@@ -92,12 +92,12 @@ function tryGetMusicHostApi() {
 }
 var hostApi;
 var init_music_host = __esm({
-  ".agnx/src/music-host.ts"() {
+  "src/music-host.ts"() {
     hostApi = null;
   }
 });
 
-// .agnx/src/playback-leader.ts
+// src/playback-leader.ts
 function initMusicPlaybackLeader(host2) {
   if (localClientIdPromise) {
     return;
@@ -143,7 +143,7 @@ function shouldHandleRemotePlaybackFocusClaim(publisherClientId) {
 }
 var MUSIC_PLAYBACK_FOCUS_CHANNEL, localClientId, localClientIdPromise;
 var init_playback_leader = __esm({
-  ".agnx/src/playback-leader.ts"() {
+  "src/playback-leader.ts"() {
     init_music_ids();
     MUSIC_PLAYBACK_FOCUS_CHANNEL = "music-playback-focus";
     localClientId = null;
@@ -151,7 +151,7 @@ var init_playback_leader = __esm({
   }
 });
 
-// .agnx/src/music-autoplay.ts
+// src/music-autoplay.ts
 function requestTrackAutoPlay(trackId) {
   const normalized = trackId.trim();
   pendingAutoPlayTrackId = normalized.length > 0 ? normalized : null;
@@ -179,12 +179,12 @@ function resolveMusicResumePositionSec(input) {
 }
 var pendingAutoPlayTrackId;
 var init_music_autoplay = __esm({
-  ".agnx/src/music-autoplay.ts"() {
+  "src/music-autoplay.ts"() {
     pendingAutoPlayTrackId = null;
   }
 });
 
-// .agnx/src/playback-cold-restore.ts
+// src/playback-cold-restore.ts
 function shouldRestoreMusicPlaybackAfterColdStart(state) {
   if (!state.wantsPlaying || !state.nowPlayingId) {
     return null;
@@ -197,11 +197,11 @@ function shouldRestoreMusicPlaybackAfterColdStart(state) {
   return { trackId: state.nowPlayingId, sourceUri };
 }
 var init_playback_cold_restore = __esm({
-  ".agnx/src/playback-cold-restore.ts"() {
+  "src/playback-cold-restore.ts"() {
   }
 });
 
-// .agnx/src/playback-session.ts
+// src/playback-session.ts
 function normalizeMusicPlaybackSessionSnapshot(raw) {
   if (!raw || typeof raw !== "object") {
     return null;
@@ -309,13 +309,13 @@ function resolveMusicPlaybackSessionWrite(input) {
 }
 var MUSIC_PLAYBACK_SESSION_STORAGE_KEY, MUSIC_PLAYBACK_SESSION_BUILD;
 var init_playback_session = __esm({
-  ".agnx/src/playback-session.ts"() {
+  "src/playback-session.ts"() {
     MUSIC_PLAYBACK_SESSION_STORAGE_KEY = "agnx.music.playback-session.v1";
     MUSIC_PLAYBACK_SESSION_BUILD = "session-noclobber-v2";
   }
 });
 
-// .agnx/src/track-menu.ts
+// src/track-menu.ts
 function resolveMusicTrackMenuIcon(actionId, pinned) {
   if (actionId === "pin") {
     return pinned ? import_lucide_react_native.PinOff : import_lucide_react_native.Pin;
@@ -403,7 +403,7 @@ function buildMusicPlayerOverflowMenuItems(input) {
 }
 var import_lucide_react_native, MUSIC_TRACK_MENU_ACTION_LABELS, MUSIC_TRACK_MENU_ICONS, MUSIC_TRACK_MENU_CONTRIBUTION_IDS, MUSIC_TRACK_MENU_ACTION_BY_CONTRIBUTION_ID, MUSIC_TRACK_MENU_SHORTCUT_KEYS, MUSIC_TRACK_MENU_SHORTCUT_SOURCE_KEYS, MUSIC_SIDEBAR_TRACK_MENU_IDS, MUSIC_SEARCH_HIT_MENU_ACTION_LABELS, MUSIC_SEARCH_HIT_MENU_ICONS, MUSIC_SEARCH_HIT_MENU_IDS, MUSIC_SEARCH_COLLECTION_MENU_ACTION_LABELS, MUSIC_SEARCH_COLLECTION_MENU_ICONS, MUSIC_SEARCH_COLLECTION_MENU_IDS;
 var init_track_menu = __esm({
-  ".agnx/src/track-menu.ts"() {
+  "src/track-menu.ts"() {
     import_lucide_react_native = require("lucide-react-native");
     MUSIC_TRACK_MENU_ACTION_LABELS = {
       pin: "\u7F6E\u9876",
@@ -505,7 +505,7 @@ var init_track_menu = __esm({
   }
 });
 
-// .agnx/src/player-action-layout.ts
+// src/player-action-layout.ts
 function getDefaultMusicPlayerActionLayout() {
   return {
     bar: ["pin", "playNext", "addPlaylist"],
@@ -586,7 +586,7 @@ function resolveMusicPlayerBarActionIds(layout) {
 }
 var MUSIC_PLAYER_ACTION_IDS, MUSIC_PLAYER_ACTION_LABELS, LEGACY_DROPPED_IDS;
 var init_player_action_layout = __esm({
-  ".agnx/src/player-action-layout.ts"() {
+  "src/player-action-layout.ts"() {
     init_track_menu();
     MUSIC_PLAYER_ACTION_IDS = [
       ...MUSIC_SIDEBAR_TRACK_MENU_IDS
@@ -612,7 +612,7 @@ var init_player_action_layout = __esm({
   }
 });
 
-// .agnx/src/cover-url-quality.ts
+// src/cover-url-quality.ts
 function neteaseParamFor(quality) {
   if (quality === "thumb") {
     return "300y300";
@@ -693,14 +693,14 @@ function coverUrlForThumb(uri) {
 }
 var NETEASE_HOST_RE, QQ_SIZE_RE, PIXABAY_SIZE_RE;
 var init_cover_url_quality = __esm({
-  ".agnx/src/cover-url-quality.ts"() {
+  "src/cover-url-quality.ts"() {
     NETEASE_HOST_RE = /(?:^|\.)music\.126\.net$/i;
     QQ_SIZE_RE = /(T\d+R)\d+x\d+(M\d+)/i;
     PIXABAY_SIZE_RE = /_(\d+)x(\d+)(\.[a-z0-9]+)(?:\?|#|$)/i;
   }
 });
 
-// .agnx/src/resource/provider-catalog.ts
+// src/resource/provider-catalog.ts
 function getMusicProviderCapabilities(providerId) {
   return CAP_BY_ID.get(providerId) ?? null;
 }
@@ -752,7 +752,7 @@ function shouldIncludeProviderForSelection(providerId, selected) {
 }
 var MUSIC_PROVIDER_CAPABILITIES, CAP_BY_ID;
 var init_provider_catalog = __esm({
-  ".agnx/src/resource/provider-catalog.ts"() {
+  "src/resource/provider-catalog.ts"() {
     MUSIC_PROVIDER_CAPABILITIES = [
       {
         id: "local",
@@ -849,7 +849,7 @@ var init_provider_catalog = __esm({
   }
 });
 
-// .agnx/src/resource/platform-registry.ts
+// src/resource/platform-registry.ts
 function listSearchFilterPlatforms() {
   const wired = /* @__PURE__ */ new Set([
     "local",
@@ -895,7 +895,7 @@ function normalizeSearchProviderSelection(value) {
 }
 var PLATFORM_CAPABILITIES, WIRED_ONLINE_SEARCH_PLATFORM_IDS, WIRED_DIRECT_SEARCH_PLATFORM_IDS, PLATFORM_MAP, KNOWN_SEARCH_PROVIDER_IDS;
 var init_platform_registry = __esm({
-  ".agnx/src/resource/platform-registry.ts"() {
+  "src/resource/platform-registry.ts"() {
     init_provider_catalog();
     PLATFORM_CAPABILITIES = [
       {
@@ -1106,7 +1106,7 @@ var init_platform_registry = __esm({
   }
 });
 
-// .agnx/src/resource/search-result-cache.ts
+// src/resource/search-result-cache.ts
 function buildMusicSearchCacheKey(input) {
   const providers2 = [...input.providerIds].map((id) => id.trim()).filter(Boolean).sort();
   return `${input.scope}::${input.query.trim().toLowerCase()}::${providers2.join(",")}`;
@@ -1176,12 +1176,12 @@ function upsertMusicSearchCacheEntry(entries, next, maxEntries = 40) {
 }
 var DEFAULT_MUSIC_SEARCH_CACHE_TTL_MINUTES;
 var init_search_result_cache = __esm({
-  ".agnx/src/resource/search-result-cache.ts"() {
+  "src/resource/search-result-cache.ts"() {
     DEFAULT_MUSIC_SEARCH_CACHE_TTL_MINUTES = 15;
   }
 });
 
-// .agnx/src/resource/collection-detail-cache.ts
+// src/resource/collection-detail-cache.ts
 function buildMusicCollectionCacheKey(input) {
   return `${input.kind}::${input.providerId.trim()}::${input.remoteId.trim()}`;
 }
@@ -1198,12 +1198,12 @@ function upsertMusicCollectionCacheEntry(entries, next, maxEntries = MUSIC_COLLE
 }
 var MUSIC_COLLECTION_CACHE_MAX_ENTRIES;
 var init_collection_detail_cache = __esm({
-  ".agnx/src/resource/collection-detail-cache.ts"() {
+  "src/resource/collection-detail-cache.ts"() {
     MUSIC_COLLECTION_CACHE_MAX_ENTRIES = 40;
   }
 });
 
-// .agnx/src/search-hit-identity.ts
+// src/search-hit-identity.ts
 function normalizeRemotePageUrl(pageUrl) {
   const raw = pageUrl?.trim() ?? "";
   if (!raw) {
@@ -1315,11 +1315,11 @@ function sameSearchHitForDownloadBadge(track, hit) {
   return sameSearchHitIdentity(track, hit);
 }
 var init_search_hit_identity = __esm({
-  ".agnx/src/search-hit-identity.ts"() {
+  "src/search-hit-identity.ts"() {
   }
 });
 
-// .agnx/src/app-prefs.ts
+// src/app-prefs.ts
 function defaultMusicAppPrefsDocument() {
   return {
     version: 1,
@@ -1448,7 +1448,7 @@ async function saveMusicAppPrefs(_config, prefs) {
 }
 var import_async_storage, MUSIC_CONFIG_KEY, MUSIC_LOCAL_PREFS_STORAGE_KEY, MUSIC_LEGACY_LOCAL_PREFS_STORAGE_KEY;
 var init_app_prefs = __esm({
-  ".agnx/src/app-prefs.ts"() {
+  "src/app-prefs.ts"() {
     import_async_storage = __toESM(require("@react-native-async-storage/async-storage"));
     init_platform_registry();
     init_search_result_cache();
@@ -1459,7 +1459,7 @@ var init_app_prefs = __esm({
   }
 });
 
-// .agnx/src/store.ts
+// src/store.ts
 var store_exports = {};
 __export(store_exports, {
   MUSIC_MAX_VOLUME: () => MUSIC_MAX_VOLUME,
@@ -1574,6 +1574,10 @@ function applyMusicAppPrefsToStore(prefs) {
     searchProviderIds: prefs.searchProviderIds,
     searchCacheTtlMinutes: prefs.searchCacheTtlMinutes
   });
+  try {
+    getMusicHostApi().ui.clearDetailSheetSegmentedLiveValues();
+  } catch {
+  }
 }
 function createTrackId() {
   return `track_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -2133,7 +2137,7 @@ function listTracksAsWorkspaceItems(query = "") {
 }
 var import_async_storage2, import_zustand, import_middleware, SEARCH_SCOPES, PERSIST_NAME, STATE_KEY, MAX_SEARCH_HISTORY, boundStorage, boundConfig, boundSync, syncUnsubscribe, playbackFocusUnsubscribe, configUnsubscribe, hostHydrationCompleted, hostHydrationListeners, HOST_WRITE_CIRCUIT_COOLDOWN_MS, hostWriteCircuitOpenUntil, hostWriteFailLoggedAt, hostWriteChain, configPersistTimer, MUSIC_MAX_VOLUME, COLLECTION_KINDS, PLAY_MODE_ORDER, hostBackedStorage, useMusicDemoStore;
 var init_store = __esm({
-  ".agnx/src/store.ts"() {
+  "src/store.ts"() {
     import_async_storage2 = __toESM(require("@react-native-async-storage/async-storage"));
     import_zustand = require("zustand");
     import_middleware = require("zustand/middleware");
@@ -2145,6 +2149,7 @@ var init_store = __esm({
     init_search_result_cache();
     init_collection_detail_cache();
     init_search_hit_identity();
+    init_music_host();
     init_app_prefs();
     SEARCH_SCOPES = ["all", "track", "artist", "album", "playlist"];
     PERSIST_NAME = "workspace-demo-music";
@@ -2279,7 +2284,8 @@ var init_store = __esm({
           coverHidden: false,
           compactActionRailVisible: true,
           lyricsDensity: "compact",
-          atmospherePushEnabled: true,
+          // 水合前保持关：避免 F5 后 prefs 未到就推氛围；急开配置也会种子错误 live 高亮。
+          atmospherePushEnabled: false,
           coverBackdropEnabled: true,
           coverBackdropBlur: 10,
           coverBackdropOpacity: 0.55,
@@ -2731,7 +2737,8 @@ var init_store = __esm({
               coverHidden: Boolean(state?.coverHidden),
               compactActionRailVisible: state?.compactActionRailVisible !== false,
               lyricsDensity: state?.lyricsDensity === "relaxed" ? "relaxed" : "compact",
-              atmospherePushEnabled: state?.atmospherePushEnabled !== false,
+              // prefs 不走 zustand partialize；migrate 缺字段时勿默认 true（否则水合窗口误开沉浸）。
+              atmospherePushEnabled: state?.atmospherePushEnabled === true,
               coverBackdropEnabled: state?.coverBackdropEnabled !== false,
               coverBackdropBlur: (() => {
                 const raw = state?.coverBackdropBlur;
@@ -2842,7 +2849,7 @@ var init_store = __esm({
   }
 });
 
-// .agnx/src/playback-runtime.ts
+// src/playback-runtime.ts
 var playback_runtime_exports = {};
 __export(playback_runtime_exports, {
   applyMusicPlaybackIntent: () => applyMusicPlaybackIntent,
@@ -3326,7 +3333,7 @@ function ensureMusicPlaybackRuntime() {
 }
 var uiSinks, runtimeInstalled, runtimeAudio, wantsPlayingBridgeInstalled, lastBridgedWantsPlaying, coldStartRestoreSucceeded, coldStartRestoreInFlight, coldRestoreWatchInstalled, coldRestoreRetryTimer, coldRestoreGestureUnlockInstalled;
 var init_playback_runtime = __esm({
-  ".agnx/src/playback-runtime.ts"() {
+  "src/playback-runtime.ts"() {
     init_playback_engine();
     init_playback_leader();
     init_music_autoplay();
@@ -3348,7 +3355,7 @@ var init_playback_runtime = __esm({
   }
 });
 
-// .agnx/src/playback-engine.ts
+// src/playback-engine.ts
 function readGlobalAudio() {
   const host2 = globalThis;
   return host2[GLOBAL_AUDIO_KEY] ?? null;
@@ -3719,7 +3726,7 @@ function prepareMusicPlaybackSourceChange() {
 }
 var GLOBAL_AUDIO_KEY, GLOBAL_GAIN_KEY, GLOBAL_LOADED_KEY, GLOBAL_MES_BOUND_KEY, BACKGROUND_ACTIVE_KEY, BACKGROUND_LISTENERS_KEY, sharedAudio;
 var init_playback_engine = __esm({
-  ".agnx/src/playback-engine.ts"() {
+  "src/playback-engine.ts"() {
     init_music_ids();
     GLOBAL_AUDIO_KEY = "__agnx_music_playback_audio__";
     GLOBAL_GAIN_KEY = "__agnx_music_playback_gain__";
@@ -3731,7 +3738,7 @@ var init_playback_engine = __esm({
   }
 });
 
-// .agnx/src/index.ts
+// src/index.ts
 var index_exports = {};
 __export(index_exports, {
   MUSIC_APP_ID: () => MUSIC_APP_ID,
@@ -3755,7 +3762,7 @@ init_playback_engine();
 init_playback_runtime();
 init_playback_leader();
 
-// .agnx/src/player.tsx
+// src/player.tsx
 var import_react11 = require("react");
 var import_react_native9 = require("react-native");
 var import_lucide_react_native8 = require("lucide-react-native");
@@ -3763,7 +3770,7 @@ var import_react_native_unistyles7 = require("react-native-unistyles");
 var import_app_sdk = require("@getagnx/app-sdk");
 init_music_ids();
 
-// .agnx/src/list-contributions.ts
+// src/list-contributions.ts
 var import_lucide_react_native2 = require("lucide-react-native");
 init_music_runtime_app_id();
 init_music_ids();
@@ -3819,12 +3826,10 @@ function registerMusicListContributions(host2) {
   });
 }
 
-// .agnx/src/detail-sheet-fields.tsx
+// src/detail-sheet-fields.tsx
 var import_react = require("react");
 var import_react_native = require("react-native");
 var import_react_native_unistyles = require("react-native-unistyles");
-init_music_ids();
-init_music_host();
 init_store();
 var import_jsx_runtime = require("react/jsx-runtime");
 async function copyTextToClipboard(text) {
@@ -3833,171 +3838,6 @@ async function copyTextToClipboard(text) {
     return;
   }
   throw new Error("clipboard unavailable");
-}
-function DetailOnOffField(props) {
-  const { theme } = (0, import_react_native_unistyles.useUnistyles)();
-  const { value, onValueChange, testID, accessibilityLabel } = props;
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-    import_react_native.View,
-    {
-      style: styles.segmentRow,
-      testID,
-      accessibilityLabel,
-      accessibilityRole: "radiogroup",
-      children: [
-        { id: "on", label: "\u5F00" },
-        { id: "off", label: "\u5173" }
-      ].map((option) => {
-        const selected = value === option.id;
-        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          import_react_native.Pressable,
-          {
-            accessibilityRole: "radio",
-            accessibilityState: { selected },
-            accessibilityLabel: option.label,
-            onPress: () => {
-              if (!selected) {
-                onValueChange(option.id);
-              }
-            },
-            style: [
-              styles.segmentChip,
-              {
-                backgroundColor: selected ? theme.colors.surface3 : "transparent"
-              }
-            ],
-            children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              import_react_native.Text,
-              {
-                style: [
-                  styles.segmentLabel,
-                  {
-                    color: selected ? theme.colors.foreground : theme.colors.foregroundMuted
-                  }
-                ],
-                children: option.label
-              }
-            )
-          },
-          option.id
-        );
-      })
-    }
-  );
-}
-function DetailBinaryField(props) {
-  const { theme } = (0, import_react_native_unistyles.useUnistyles)();
-  const { value, options, onValueChange, testID, accessibilityLabel } = props;
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-    import_react_native.View,
-    {
-      style: styles.segmentRow,
-      testID,
-      accessibilityLabel,
-      accessibilityRole: "radiogroup",
-      children: options.map((option) => {
-        const selected = value === option.id;
-        return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          import_react_native.Pressable,
-          {
-            accessibilityRole: "radio",
-            accessibilityState: { selected },
-            accessibilityLabel: option.label,
-            onPress: () => {
-              if (!selected) {
-                onValueChange(option.id);
-              }
-            },
-            style: [
-              styles.segmentChip,
-              {
-                backgroundColor: selected ? theme.colors.surface3 : "transparent"
-              }
-            ],
-            children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              import_react_native.Text,
-              {
-                style: [
-                  styles.segmentLabel,
-                  {
-                    color: selected ? theme.colors.foreground : theme.colors.foregroundMuted
-                  }
-                ],
-                children: option.label
-              }
-            )
-          },
-          option.id
-        );
-      })
-    }
-  );
-}
-function MusicImmersionDetailField() {
-  const enabled = useMusicDemoStore((state) => state.atmospherePushEnabled);
-  const setEnabled = useMusicDemoStore((state) => state.setAtmospherePushEnabled);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-    DetailOnOffField,
-    {
-      value: enabled ? "on" : "off",
-      testID: "music-detail-immersion",
-      accessibilityLabel: "\u6C89\u6D78\u6A21\u5F0F",
-      onValueChange: (next) => {
-        if (next === "on") {
-          setEnabled(true);
-          return;
-        }
-        setEnabled(false);
-        try {
-          getMusicHostApi().ui.clearAtmosphere(MUSIC_APP_ID);
-        } catch {
-        }
-      }
-    }
-  );
-}
-function MusicCoverBackdropEnabledDetailField() {
-  const enabled = useMusicDemoStore((state) => state.coverBackdropEnabled);
-  const setEnabled = useMusicDemoStore((state) => state.setCoverBackdropEnabled);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-    DetailOnOffField,
-    {
-      value: enabled ? "on" : "off",
-      testID: "music-detail-cover-backdrop",
-      accessibilityLabel: "\u5C01\u9762\u80CC\u666F",
-      onValueChange: (next) => setEnabled(next === "on")
-    }
-  );
-}
-function MusicCoverBackdropTabBarDetailField() {
-  const enabled = useMusicDemoStore((state) => state.coverBackdropIncludeTabBar);
-  const setEnabled = useMusicDemoStore((state) => state.setCoverBackdropIncludeTabBar);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-    DetailOnOffField,
-    {
-      value: enabled ? "on" : "off",
-      testID: "music-detail-cover-backdrop-tab-bar",
-      accessibilityLabel: "Tab \u4E00\u4F53",
-      onValueChange: (next) => setEnabled(next === "on")
-    }
-  );
-}
-function MusicLyricsDensityDetailField() {
-  const density = useMusicDemoStore((state) => state.lyricsDensity);
-  const setDensity = useMusicDemoStore((state) => state.setLyricsDensity);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-    DetailBinaryField,
-    {
-      value: density === "relaxed" ? "relaxed" : "compact",
-      options: [
-        { id: "compact", label: "\u7D27\u51D1" },
-        { id: "relaxed", label: "\u5BBD\u677E" }
-      ],
-      testID: "music-detail-lyrics-density",
-      accessibilityLabel: "\u6B4C\u8BCD\u884C\u8DDD",
-      onValueChange: (next) => setDensity(next === "relaxed" ? "relaxed" : "compact")
-    }
-  );
 }
 function DetailRangeSlider(props) {
   const { theme } = (0, import_react_native_unistyles.useUnistyles)();
@@ -4321,31 +4161,10 @@ var styles = import_react_native_unistyles.StyleSheet.create((theme) => ({
     flexShrink: 0,
     paddingHorizontal: 4,
     paddingVertical: 2
-  },
-  segmentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    padding: 2,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.surface1,
-    flexShrink: 0
-  },
-  segmentChip: {
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: theme.spacing[1],
-    borderRadius: theme.borderRadius.sm,
-    minHeight: 28,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  segmentLabel: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.medium
   }
 }));
 
-// .agnx/src/lyrics.ts
+// src/lyrics.ts
 var LRC_LINE_RE = /^\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\](.*)$/;
 var TRAILING_LRC_TIME_RE = /\[\d{1,2}:\d{1,2}(?:\.\d{1,3})?\]\s*$/g;
 var INLINE_LRC_TIME_RE = /\[\d{1,2}:\d{1,2}(?:\.\d{1,3})?\]/g;
@@ -4459,14 +4278,14 @@ function quantizeLyricProgress(progress, steps = 24) {
   return Math.min(1, Math.max(0, Math.round(progress * s) / s));
 }
 
-// .agnx/src/queue-drawer.tsx
+// src/queue-drawer.tsx
 var import_react3 = require("react");
 var import_react_native2 = require("react-native");
 var import_lucide_react_native3 = require("lucide-react-native");
 var import_react_native_unistyles2 = require("react-native-unistyles");
 init_music_host();
 
-// .agnx/src/queue-scroll.ts
+// src/queue-scroll.ts
 var FALLBACK_ROW_HEIGHT = 56;
 function resolveQueueScrollOffset(input) {
   const rowHeight = input.rowHeight > 0 ? input.rowHeight : FALLBACK_ROW_HEIGHT;
@@ -4486,11 +4305,11 @@ function resolveQueueScrollOffset(input) {
   return centered;
 }
 
-// .agnx/src/queue-drawer.tsx
+// src/queue-drawer.tsx
 init_player_action_layout();
 init_track_menu();
 
-// .agnx/src/track-menu-surfaces.ts
+// src/track-menu-surfaces.ts
 var import_react2 = require("react");
 init_music_ids();
 init_player_action_layout();
@@ -4689,7 +4508,7 @@ function useMusicTrackEntityMenuLayout(surfaceId) {
   return { layout, openEditLayout };
 }
 
-// .agnx/src/queue-drawer.tsx
+// src/queue-drawer.tsx
 var import_jsx_runtime2 = require("react/jsx-runtime");
 var DESKTOP_RAIL_WIDTH = 340;
 var FALLBACK_ROW_HEIGHT2 = 56;
@@ -5421,7 +5240,7 @@ var styles2 = import_react_native_unistyles2.StyleSheet.create((theme) => ({
   }
 }));
 
-// .agnx/src/search-view.tsx
+// src/search-view.tsx
 var import_react5 = require("react");
 var import_react_native4 = require("react-native");
 var import_lucide_react_native5 = require("lucide-react-native");
@@ -5429,10 +5248,10 @@ var import_react_native_unistyles4 = require("react-native-unistyles");
 init_cover_url_quality();
 init_platform_registry();
 
-// .agnx/src/resource/local-provider.ts
+// src/resource/local-provider.ts
 init_store();
 
-// .agnx/src/resource/collection-list-helpers.ts
+// src/resource/collection-list-helpers.ts
 function resolveCollectionListTitle(query) {
   const explicit = query.title?.trim() ?? "";
   if (explicit) {
@@ -5544,7 +5363,7 @@ async function listCollectionByNameSearch(provider, query, options) {
   };
 }
 
-// .agnx/src/resource/local-provider.ts
+// src/resource/local-provider.ts
 function emptyPage(query) {
   return {
     query,
@@ -5598,10 +5417,10 @@ var localMusicProvider = {
   }
 };
 
-// .agnx/src/resource/service.ts
+// src/resource/service.ts
 init_platform_registry();
 
-// .agnx/src/resource/sidecar-fetch.ts
+// src/resource/sidecar-fetch.ts
 var fetchJsonImpl = null;
 function setMusicSidecarFetchJson(impl) {
   fetchJsonImpl = impl;
@@ -5638,7 +5457,7 @@ async function fetchMusicSidecarJson(url, init) {
   return body;
 }
 
-// .agnx/src/resource/aiguo-provider.ts
+// src/resource/aiguo-provider.ts
 var PROVIDER_ID = "aiguo";
 var USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 var AIGUO_MIRRORS = [
@@ -6013,7 +5832,7 @@ var aiguoMusicProvider = {
   }
 };
 
-// .agnx/src/resource/audiocom-provider.ts
+// src/resource/audiocom-provider.ts
 init_provider_catalog();
 var AUDIOCOM_PROVIDER_ID = "audiocom";
 var AUDIOCOM_API_ORIGIN = "https://api.audio.com";
@@ -6315,7 +6134,7 @@ var audiocomMusicProvider = {
   }
 };
 
-// .agnx/src/resource/muzvox-provider.ts
+// src/resource/muzvox-provider.ts
 init_provider_catalog();
 var MUZVOX_PROVIDER_ID = "muzvox";
 var MUZVOX_ORIGIN = "https://muzvox.org";
@@ -6596,13 +6415,13 @@ var muzvoxMusicProvider = {
   }
 };
 
-// .agnx/src/resource/service.ts
+// src/resource/service.ts
 init_provider_catalog();
 
-// .agnx/src/resource/sidecar-provider.ts
+// src/resource/sidecar-provider.ts
 init_cover_url_quality();
 
-// .agnx/src/resource/sidecar-contract.ts
+// src/resource/sidecar-contract.ts
 init_platform_registry();
 function buildSidecarCollectionUrl(baseUrl, request) {
   const url = new URL("/api/v1/music/collection", baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
@@ -6680,7 +6499,7 @@ function buildSidecarResolveRequest(ref) {
   };
 }
 
-// .agnx/src/resource/sidecar-config.ts
+// src/resource/sidecar-config.ts
 var DEV_PROBE_BASE_URL = "http://127.0.0.1:8080";
 var DEV_PROBE_RETRY_MS = 15e3;
 var discoveredDevBaseUrl;
@@ -6720,7 +6539,7 @@ async function getMusicSidecarBaseUrl() {
   return discoveredDevBaseUrl;
 }
 
-// .agnx/src/resource/sidecar-provider.ts
+// src/resource/sidecar-provider.ts
 function emptyPage5(query) {
   return {
     query,
@@ -7151,11 +6970,11 @@ var sidecarMusicProvider = {
   }
 };
 
-// .agnx/src/resource/txqq-provider.ts
+// src/resource/txqq-provider.ts
 init_cover_url_quality();
 init_platform_registry();
 
-// .agnx/src/resource/search-debug-urls.ts
+// src/resource/search-debug-urls.ts
 function buildPixabayMusicSearchUrl(keyword, page = 1) {
   const base = `https://pixabay.com/zh/music/search/${encodeURIComponent(keyword.trim() || "lofi")}/`;
   return page > 1 ? `${base}?pagi=${page}` : base;
@@ -7195,7 +7014,7 @@ function mergeSearchDebugRequests(...groups) {
   return merged;
 }
 
-// .agnx/src/resource/txqq-provider.ts
+// src/resource/txqq-provider.ts
 var AGGREGATOR_ENDPOINTS = ["https://music.txqq.pro/", "https://music.itzo.cn/"];
 var aggregatorEndpointCursor = 0;
 function aggregatorOrigin(endpoint) {
@@ -7520,7 +7339,7 @@ async function findTxqqLyricsText(input) {
   return null;
 }
 
-// .agnx/src/resource/host-media.ts
+// src/resource/host-media.ts
 var createMediaProxyUrlImpl = null;
 var captureBrowserMediaImpl = null;
 function setMusicHostMediaApis(input) {
@@ -7555,7 +7374,7 @@ function hasMusicBrowserCapture() {
   return captureBrowserMediaImpl != null;
 }
 
-// .agnx/src/resource/web-browser-provider.ts
+// src/resource/web-browser-provider.ts
 function emptyPage7(query, error, providerId, debugSearchRequests) {
   return {
     query,
@@ -7865,7 +7684,7 @@ var soundstripeMusicProvider = {
   }
 };
 
-// .agnx/src/resource/playable-filter.ts
+// src/resource/playable-filter.ts
 var PLAYABLE_VERIFY_CONCURRENCY = 4;
 var PLAYABLE_CANDIDATES_PER_PLATFORM = 6;
 var MAX_PLAYABLE_SEARCH_RESULTS = 24;
@@ -7934,7 +7753,7 @@ async function verifyPlayableTracks(tracks, resolvePlayable) {
   };
 }
 
-// .agnx/src/resource/service.ts
+// src/resource/service.ts
 var providers = [
   localMusicProvider,
   txqqMusicProvider,
@@ -8183,7 +8002,7 @@ async function fetchMusicLyrics(ref) {
   return null;
 }
 
-// .agnx/src/resource/search-page-merge.ts
+// src/resource/search-page-merge.ts
 function refKey(providerId, remoteId) {
   return `${providerId.trim()}:${remoteId.trim()}`;
 }
@@ -8256,10 +8075,10 @@ function mergeSearchResultPages(current, more, nextPageNum) {
   };
 }
 
-// .agnx/src/search-view.tsx
+// src/search-view.tsx
 init_search_result_cache();
 
-// .agnx/src/resource/collection-resolve.ts
+// src/resource/collection-resolve.ts
 function isDerivedCollectionRemoteId(remoteId) {
   return remoteId.startsWith("artist:") || remoteId.startsWith("album:");
 }
@@ -8308,12 +8127,12 @@ function collectionTrackCountSuffix(source) {
   return "";
 }
 
-// .agnx/src/provider-icons.tsx
+// src/provider-icons.tsx
 var import_react_native3 = require("react-native");
 var import_lucide_react_native4 = require("lucide-react-native");
 var import_react_native_unistyles3 = require("react-native-unistyles");
 
-// .agnx/src/provider-icon-assets.ts
+// src/provider-icon-assets.ts
 function pngDataUri(b64) {
   return { uri: `data:image/png;base64,${b64}` };
 }
@@ -8353,7 +8172,7 @@ var LOCAL_PROVIDER_ICON_SOURCES = {
   )
 };
 
-// .agnx/src/provider-icons.tsx
+// src/provider-icons.tsx
 var import_jsx_runtime3 = require("react/jsx-runtime");
 function LocalIcon(props) {
   const { theme } = (0, import_react_native_unistyles3.useUnistyles)();
@@ -8413,11 +8232,11 @@ var styles3 = import_react_native3.StyleSheet.create({
   }
 });
 
-// .agnx/src/search-view.tsx
+// src/search-view.tsx
 init_store();
 init_music_host();
 
-// .agnx/src/search-menu-surfaces.ts
+// src/search-menu-surfaces.ts
 var import_react4 = require("react");
 init_music_ids();
 init_music_host();
@@ -8557,7 +8376,7 @@ function useMusicSearchCollectionMenuLayout() {
   return useMusicSearchMenuLayout("collection");
 }
 
-// .agnx/src/search-view.tsx
+// src/search-view.tsx
 init_music_ids();
 init_track_menu();
 var import_jsx_runtime4 = require("react/jsx-runtime");
@@ -10822,7 +10641,7 @@ var styles4 = import_react_native_unistyles4.StyleSheet.create((theme) => ({
   }
 }));
 
-// .agnx/src/transport-controls.tsx
+// src/transport-controls.tsx
 var import_lucide_react_native6 = require("lucide-react-native");
 var import_jsx_runtime5 = require("react/jsx-runtime");
 function TransportModeControl(props) {
@@ -10876,13 +10695,13 @@ function TransportQueueControl(props) {
   );
 }
 
-// .agnx/src/track-identity.tsx
+// src/track-identity.tsx
 var import_react7 = require("react");
 var import_react_native6 = require("react-native");
 var import_react_native_unistyles6 = require("react-native-unistyles");
 init_cover_url_quality();
 
-// .agnx/src/marquee-text.tsx
+// src/marquee-text.tsx
 var import_react6 = require("react");
 var import_react_native5 = require("react-native");
 var import_react_native_unistyles5 = require("react-native-unistyles");
@@ -11284,7 +11103,7 @@ var styles5 = import_react_native_unistyles5.StyleSheet.create({
   }
 });
 
-// .agnx/src/track-identity.tsx
+// src/track-identity.tsx
 var import_jsx_runtime7 = require("react/jsx-runtime");
 function displayUriForCoverSize(size, displayUri) {
   if (!displayUri) {
@@ -11541,13 +11360,13 @@ var styles6 = import_react_native_unistyles6.StyleSheet.create((theme) => ({
   }
 }));
 
-// .agnx/src/player.tsx
+// src/player.tsx
 init_cover_url_quality();
 
-// .agnx/src/sync-content-backdrop.ts
+// src/sync-content-backdrop.ts
 init_music_ids();
 
-// .agnx/src/resolve-cover-backdrop-uri.ts
+// src/resolve-cover-backdrop-uri.ts
 init_cover_url_quality();
 function isDirectImageUri(uri) {
   return /^https?:\/\//.test(uri) || uri.startsWith("data:") || uri.startsWith("blob:");
@@ -11577,7 +11396,7 @@ async function resolveMusicCoverBackdropImageUri(input) {
   return null;
 }
 
-// .agnx/src/sync-content-backdrop.ts
+// src/sync-content-backdrop.ts
 init_store();
 async function syncMusicContentBackdropToHost(hostApi2, options) {
   const sourceId = MUSIC_APP_ID;
@@ -11616,12 +11435,12 @@ async function syncMusicContentBackdropToHost(hostApi2, options) {
   });
 }
 
-// .agnx/src/player.tsx
+// src/player.tsx
 init_player_action_layout();
 init_track_menu();
 init_store();
 
-// .agnx/src/music-tab-icon.tsx
+// src/music-tab-icon.tsx
 var import_react8 = require("react");
 var import_react_native7 = require("react-native");
 var import_lucide_react_native7 = require("lucide-react-native");
@@ -11704,7 +11523,7 @@ function MusicTabIcon(props) {
   return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(import_lucide_react_native7.Music2, { size, color, strokeWidth: 2 });
 }
 
-// .agnx/src/extract-cover-atmosphere.ts
+// src/extract-cover-atmosphere.ts
 var ATMOSPHERE_EXTRACT_VERSION = 3;
 function clampByte(value) {
   return Math.max(0, Math.min(255, Math.round(value)));
@@ -12000,7 +11819,7 @@ async function ensureTrackAtmospherePalette(input) {
   return palette;
 }
 
-// .agnx/src/resolve-desktop-stage-split.ts
+// src/resolve-desktop-stage-split.ts
 var DESKTOP_COVER_COLUMN_PX = 320;
 function estimateLyricContentWidthPx(text, fontSizePx) {
   const size = Math.max(1, fontSizePx);
@@ -12064,11 +11883,11 @@ function resolveDesktopStageSplit(input) {
   };
 }
 
-// .agnx/src/player.tsx
+// src/player.tsx
 init_music_autoplay();
 init_playback_session();
 
-// .agnx/src/host-feedback.ts
+// src/host-feedback.ts
 init_music_ids();
 init_music_host();
 function formatSuccessMessage(input) {
@@ -12134,7 +11953,7 @@ function notifyMusicPlayerToast(message) {
   });
 }
 
-// .agnx/src/resource/download-bundle.ts
+// src/resource/download-bundle.ts
 init_music_ids();
 init_store();
 init_cover_url_quality();
@@ -12463,7 +12282,7 @@ async function downloadAndPersistTrackBundle(hostApi2, trackId, options) {
   );
 }
 
-// .agnx/src/resource/track-files.ts
+// src/resource/track-files.ts
 init_music_ids();
 init_store();
 function extensionOfUri(uri, fallback) {
@@ -12547,7 +12366,7 @@ async function deleteMusicTrackCompletely(hostApi2, trackId) {
   return useMusicDemoStore.getState().deleteTrack(trackId);
 }
 
-// .agnx/src/resource/refresh-resources.ts
+// src/resource/refresh-resources.ts
 init_store();
 init_provider_catalog();
 function isStockBrowserProvider(providerId) {
@@ -12640,11 +12459,11 @@ async function refreshTrackResourcesAndMaybePersist(hostApi2, trackId, _options)
   };
 }
 
-// .agnx/src/track-menu-run.ts
+// src/track-menu-run.ts
 init_music_autoplay();
 init_store();
 
-// .agnx/src/track-detail.tsx
+// src/track-detail.tsx
 init_music_ids();
 init_platform_registry();
 init_store();
@@ -12765,7 +12584,7 @@ async function openMusicTrackDetailSheet(hostApi2, _trackId) {
   });
 }
 
-// .agnx/src/track-menu-run.ts
+// src/track-menu-run.ts
 async function runMusicTrackMenuAction(input) {
   const trackId = input.trackId.trim();
   if (!trackId) {
@@ -12841,7 +12660,7 @@ async function runMusicTrackMenuAction(input) {
   }
 }
 
-// .agnx/src/resource/cloud-playback.ts
+// src/resource/cloud-playback.ts
 init_playback_engine();
 var PROVIDER_PRIORITY = [
   "qq",
@@ -12950,10 +12769,10 @@ async function findCloudPlayableAlternates(input) {
   return result;
 }
 
-// .agnx/src/player.tsx
+// src/player.tsx
 init_provider_catalog();
 
-// .agnx/src/resource/ui-smoke.ts
+// src/resource/ui-smoke.ts
 init_music_ids();
 init_store();
 var MUSIC_UI_SMOKE_REQUEST_KEY = "ui-smoke-request";
@@ -13090,11 +12909,11 @@ function startMusicUiSmokeWatcher(hostApi2) {
   };
 }
 
-// .agnx/src/player.tsx
+// src/player.tsx
 init_playback_engine();
 init_playback_runtime();
 
-// .agnx/src/playback-ui-clock.ts
+// src/playback-ui-clock.ts
 var MUSIC_PLAYBACK_UI_MIN_INTERVAL_MS = 200;
 function shouldCommitPlaybackUiTime(input) {
   if (input.force) {
@@ -13107,7 +12926,7 @@ function shouldCommitPlaybackUiTime(input) {
   return { commit: false };
 }
 
-// .agnx/src/playback-ui-time-store.ts
+// src/playback-ui-time-store.ts
 var timeSec = 0;
 var pendingTimeSec = 0;
 var lastCommitMs = 0;
@@ -13161,11 +12980,11 @@ function publishPlaybackUiTime(time, force = false) {
   }, MUSIC_PLAYBACK_UI_MIN_INTERVAL_MS);
 }
 
-// .agnx/src/music-lyrics-karaoke.tsx
+// src/music-lyrics-karaoke.tsx
 var import_react10 = require("react");
 var import_react_native8 = require("react-native");
 
-// .agnx/src/use-playback-ui-time.ts
+// src/use-playback-ui-time.ts
 var import_react9 = require("react");
 function usePlaybackUiTime() {
   return (0, import_react9.useSyncExternalStore)(subscribePlaybackUiTime, getPlaybackUiTime, getPlaybackUiTime);
@@ -13201,7 +13020,7 @@ function usePlaybackLyricHighlight(input) {
   );
 }
 
-// .agnx/src/music-lyrics-karaoke.tsx
+// src/music-lyrics-karaoke.tsx
 var import_jsx_runtime10 = require("react/jsx-runtime");
 var KARAOKE_STYLE_ID = "agnx-music-lyric-karaoke-v8";
 var LEGACY_KARAOKE_STYLE_IDS = [
@@ -13509,10 +13328,10 @@ function MusicLyricPlainActiveText(props) {
   );
 }
 
-// .agnx/src/player.tsx
+// src/player.tsx
 init_music_host();
 
-// .agnx/src/perf-self-report.ts
+// src/perf-self-report.ts
 init_music_ids();
 init_music_host();
 init_store();
@@ -13622,7 +13441,7 @@ function stopMusicPerfSelfReport() {
   stopHandle = null;
 }
 
-// .agnx/src/music-player-shortcuts.ts
+// src/music-player-shortcuts.ts
 init_music_ids();
 var MUSIC_PLAYER_SHORTCUT_SLOTS = [
   {
@@ -13817,7 +13636,7 @@ function registerMusicPlayerShortcuts(host2) {
   }
 }
 
-// .agnx/src/player.tsx
+// src/player.tsx
 var import_jsx_runtime11 = require("react/jsx-runtime");
 var MINI_APP_PANE_INTERACTIVE_EVENT = "agnx-mini-app-pane-interactive";
 var MUSIC_LYRICS_FOLLOW_ACTIVE_COLOR = "#60A5FA";
@@ -15416,6 +15235,11 @@ function MusicPlayerContent(props) {
   (0, import_react11.useEffect)(() => {
     let cancelled = false;
     const sourceId = MUSIC_APP_ID;
+    if (!libraryHydrationReady) {
+      return () => {
+        cancelled = true;
+      };
+    }
     const label = track?.title?.trim() || void 0;
     const trackId = track?.id;
     const themeBrightness = theme.colorScheme === "light" ? "light" : "dark";
@@ -15480,6 +15304,7 @@ function MusicPlayerContent(props) {
   }, [
     atmospherePushEnabled,
     coverDisplay,
+    libraryHydrationReady,
     theme.colorScheme,
     track?.coverUri,
     track?.id,
@@ -18815,23 +18640,52 @@ function registerMusicApp(nextHost) {
       host().requestPrimaryView(MUSIC_SEGMENT_ID);
     }
   });
+  const MUSIC_ON_OFF_OPTIONS = [
+    { value: "on", label: "\u5F00" },
+    { value: "off", label: "\u5173" }
+  ];
   nextHost.ui.registerDetailSheetExtras({
     appId: MUSIC_APP_ID,
     surface: "config",
     buildRows: () => {
       const state = useMusicDemoStore.getState();
+      const store = useMusicDemoStore.getState;
       return [
         {
           label: "\u6C89\u6D78\u6A21\u5F0F",
           value: state.atmospherePushEnabled ? "\u5F00" : "\u5173",
           helpText: "\u5F00\u542F\u540E\u6309\u5F53\u524D\u5C01\u9762\u4E3B\u8272\u67D3\u8272\u6574\u7A97\uFF1B\u5173\u95ED\u5219\u6E05\u9664\u672C App \u63A8\u9001\u7684\u6C1B\u56F4\u8272\u3002",
-          valueContent: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(MusicImmersionDetailField, {})
+          control: {
+            type: "segmented",
+            options: [...MUSIC_ON_OFF_OPTIONS],
+            value: state.atmospherePushEnabled ? "on" : "off",
+            testID: "music-detail-immersion",
+            onValueChange: (next) => {
+              if (next === "on") {
+                store().setAtmospherePushEnabled(true);
+                return;
+              }
+              store().setAtmospherePushEnabled(false);
+              try {
+                host().ui.clearAtmosphere(MUSIC_APP_ID);
+              } catch {
+              }
+            }
+          }
         },
         {
           label: "\u5C01\u9762\u80CC\u666F",
           value: state.coverBackdropEnabled ? "\u5F00" : "\u5173",
           helpText: "\u5F00\u542F\u540E\u5728\u5DE5\u4F5C\u533A\u4E2D\u95F4\u533A\u94FA\u5F53\u524D\u5C01\u9762\u6726\u80E7\u80CC\u666F\uFF08\u5207\u5230\u5176\u5B83 Tab \u4ECD\u7C98\u6EDE\uFF09\uFF1B\u4E0E\u6C89\u6D78\u6A21\u5F0F\uFF08\u6574\u7A97\u53D6\u8272\uFF09\u72EC\u7ACB\u3002",
-          valueContent: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(MusicCoverBackdropEnabledDetailField, {})
+          control: {
+            type: "segmented",
+            options: [...MUSIC_ON_OFF_OPTIONS],
+            value: state.coverBackdropEnabled ? "on" : "off",
+            testID: "music-detail-cover-backdrop",
+            onValueChange: (next) => {
+              store().setCoverBackdropEnabled(next === "on");
+            }
+          }
         },
         {
           label: "\u80CC\u666F\u6A21\u7CCA",
@@ -18849,7 +18703,15 @@ function registerMusicApp(nextHost) {
           label: "Tab \u4E00\u4F53",
           value: state.coverBackdropIncludeTabBar ? "\u5F00" : "\u5173",
           helpText: "\u5F00\u542F\u540E\u5DE5\u4F5C\u533A Tab \u6761\u534A\u900F\u6DF1\u7F69\u5E76\u900F\u51FA\u540C\u4E00\u5C01\u9762\uFF08\u6BD4\u5185\u5BB9\u533A\u7565\u6DF1\u3001\u66F4\u597D\u626B\u8BFB\uFF09\uFF1B\u5173\u95ED\u5219 Tab \u6761\u4FDD\u6301\u5B9E\u5E95\u3002",
-          valueContent: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(MusicCoverBackdropTabBarDetailField, {})
+          control: {
+            type: "segmented",
+            options: [...MUSIC_ON_OFF_OPTIONS],
+            value: state.coverBackdropIncludeTabBar ? "on" : "off",
+            testID: "music-detail-cover-backdrop-tab-bar",
+            onValueChange: (next) => {
+              store().setCoverBackdropIncludeTabBar(next === "on");
+            }
+          }
         },
         {
           label: "\u641C\u7D22\u7F13\u5B58",
@@ -18861,7 +18723,18 @@ function registerMusicApp(nextHost) {
           label: "\u6B4C\u8BCD\u884C\u8DDD",
           value: state.lyricsDensity === "relaxed" ? "\u5BBD\u677E" : "\u7D27\u51D1",
           helpText: "\u70B9\u300C\u7D27\u51D1/\u5BBD\u677E\u300D\u5207\u6362\uFF1B\u7D27\u51D1\u4EC5\u884C\u5185 padding\uFF0C\u5BBD\u677E\u6062\u590D\u884C\u95F4 gap\u3002",
-          valueContent: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(MusicLyricsDensityDetailField, {})
+          control: {
+            type: "segmented",
+            options: [
+              { value: "compact", label: "\u7D27\u51D1" },
+              { value: "relaxed", label: "\u5BBD\u677E" }
+            ],
+            value: state.lyricsDensity === "relaxed" ? "relaxed" : "compact",
+            testID: "music-detail-lyrics-density",
+            onValueChange: (next) => {
+              store().setLyricsDensity(next === "relaxed" ? "relaxed" : "compact");
+            }
+          }
         }
       ];
     }
@@ -18934,10 +18807,10 @@ function registerMusicApp(nextHost) {
   });
 }
 
-// .agnx/src/agent-tools.ts
+// src/agent-tools.ts
 init_music_ids();
 
-// .agnx/src/agent-play-query.ts
+// src/agent-play-query.ts
 init_store();
 init_playback_runtime();
 function normalizeQuery(raw) {
@@ -19365,7 +19238,7 @@ async function playMusicByQuery(input) {
   });
 }
 
-// .agnx/src/agent-tools.ts
+// src/agent-tools.ts
 init_playback_engine();
 init_playback_runtime();
 init_platform_registry();
@@ -20157,7 +20030,7 @@ function registerMusicAgentTools(host2) {
   });
 }
 
-// .agnx/src/index.ts
+// src/index.ts
 init_music_host();
 init_store();
 init_music_ids();
