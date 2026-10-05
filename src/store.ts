@@ -990,8 +990,19 @@ async function persistSanitizedToHost(
   if (isHostWriteCircuitOpen()) {
     return;
   }
+  const hostTracksDoc = toHostTracksPersistDoc(doc);
+  const nextJson = hostTracksJson(hostTracksDoc.state.tracks);
+  if (nextJson === lastHostTracksJson) {
+    return;
+  }
   try {
-    await storage.writeJson(getMusicRuntimeAppId(), STATE_KEY, toHostTracksPersistDoc(doc));
+    const written = await storage.writeJson(
+      getMusicRuntimeAppId(),
+      STATE_KEY,
+      hostTracksDoc,
+    );
+    lastHostTracksJson = nextJson;
+    void written;
   } catch (error) {
     openHostWriteCircuit(error);
   }
@@ -1114,6 +1125,11 @@ const hostBackedStorage: StateStorage = {
     if (isHostWriteCircuitOpen()) {
       return;
     }
+    const hostTracksDocPreview = toHostTracksPersistDoc(docToWrite);
+    const previewTracksJson = hostTracksJson(hostTracksDocPreview.state.tracks);
+    if (previewTracksJson === lastHostTracksJson) {
+      return;
+    }
     await enqueueHostWrite(async () => {
       if (!boundStorage || isHostWriteCircuitOpen()) {
         return;
@@ -1149,8 +1165,15 @@ const hostBackedStorage: StateStorage = {
           lastHostTracksJson = nextJson;
           return;
         }
-        await boundStorage.writeJson(getMusicRuntimeAppId(), STATE_KEY, hostTracksDoc);
+        const written = await boundStorage.writeJson(
+          getMusicRuntimeAppId(),
+          STATE_KEY,
+          hostTracksDoc,
+        );
         lastHostTracksJson = nextJson;
+        if (!written) {
+          return;
+        }
         boundSync?.publish({
           appId: getMusicRuntimeAppId(),
           channel: STATE_KEY,
@@ -1916,6 +1939,7 @@ export function bindMusicHostStorage(
     playbackRuntime.applyMusicPlaybackSessionSnapshotAfterHydrate();
   })().finally(() => {
     hostHydrationCompleted = true;
+    lastHostTracksJson = hostTracksJson(useMusicDemoStore.getState().tracks);
     notifyMusicHostHydrationListeners();
   });
 }
