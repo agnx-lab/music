@@ -295,6 +295,24 @@ const HOST_WRITE_CIRCUIT_COOLDOWN_MS = 30_000;
 let hostWriteCircuitOpenUntil = 0;
 let hostWriteFailLoggedAt = 0;
 let hostWriteChain: Promise<void> = Promise.resolve();
+/** 上次已落到 host 的曲库 JSON。相同则跳过读盘、写盘和 sync。 */
+let lastHostTracksJson: string | null = null;
+
+function hostTracksJson(tracks: DemoTrack[]): string {
+  return JSON.stringify(tracks);
+}
+
+function sameStringList(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function isHostWriteCircuitOpen(): boolean {
   return Date.now() < hostWriteCircuitOpenUntil;
@@ -998,6 +1016,13 @@ function applyHostTracksToStore(tracks: DemoTrack[]): void {
     nowPlayingId = tracks[0]?.id ?? null;
   }
   const queueIds = state.queueIds.filter((id) => trackIds.has(id));
+  if (
+    nowPlayingId === state.nowPlayingId &&
+    sameStringList(queueIds, state.queueIds) &&
+    hostTracksJson(tracks) === hostTracksJson(state.tracks)
+  ) {
+    return;
+  }
   useMusicDemoStore.setState({ tracks, nowPlayingId, queueIds });
 }
 
@@ -1094,6 +1119,11 @@ const hostBackedStorage: StateStorage = {
         return;
       }
       try {
+        const hostTracksDoc = toHostTracksPersistDoc(docToWrite);
+        const nextJson = hostTracksJson(hostTracksDoc.state.tracks);
+        if (nextJson === lastHostTracksJson) {
+          return;
+        }
         // 防护：内存短列表（HMR/半水合/误删）不得把 host 上已有大曲库冲掉。
         // 单首删除（差 1）与小幅编辑仍放行；骤降 ≥5 且不足原库一半则拒写并回读 host。
         const existingHost = await readMusicHostStateDoc();
@@ -1112,8 +1142,15 @@ const hostBackedStorage: StateStorage = {
           void mergeMusicTracksFromHostStorage();
           return;
         }
-        const hostTracksDoc = toHostTracksPersistDoc(docToWrite);
+        const existingJson = existingSanitized
+          ? hostTracksJson(existingSanitized.state.tracks)
+          : null;
+        if (existingJson === nextJson) {
+          lastHostTracksJson = nextJson;
+          return;
+        }
         await boundStorage.writeJson(getMusicRuntimeAppId(), STATE_KEY, hostTracksDoc);
+        lastHostTracksJson = nextJson;
         boundSync?.publish({
           appId: getMusicRuntimeAppId(),
           channel: STATE_KEY,
@@ -1137,6 +1174,7 @@ const hostBackedStorage: StateStorage = {
         state: { tracks: [] },
         version: 6,
       });
+      lastHostTracksJson = hostTracksJson([]);
     } catch (error) {
       openHostWriteCircuit(error);
     }
