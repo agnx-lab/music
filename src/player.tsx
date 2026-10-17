@@ -179,6 +179,7 @@ import { startMusicPerfSelfReport, stopMusicPerfSelfReport } from "./perf-self-r
 import {
   MUSIC_PLAYER_EXTRA_SHORTCUTS,
   MUSIC_PLAYER_SHORTCUT_SLOTS,
+  buildMusicPlayerDetailShortcutExtraRows,
   registerMusicPlayerShortcuts,
   setMusicPlayerShortcutHandlers,
   setMusicPlayerShortcutSurfaceActive,
@@ -5899,7 +5900,7 @@ export function registerMusicApp(nextHost: WorkspaceAppHostApi): void {
     appId: MUSIC_APP_ID,
     actionId: "workspace.app.view.music",
     helpId: "sidebar-wechat-view-music",
-    label: "切换到音乐主视图",
+    label: "侧边栏切换到音乐",
     sectionId: "music",
     sectionTitle: "音乐",
     macCombo: "Cmd+6",
@@ -6011,6 +6012,7 @@ export function registerMusicApp(nextHost: WorkspaceAppHostApi): void {
             },
           },
         },
+        ...buildMusicPlayerDetailShortcutExtraRows(),
       ];
     },
   });
@@ -6053,7 +6055,8 @@ export function registerMusicApp(nextHost: WorkspaceAppHostApi): void {
     id: MUSIC_OPEN_PLAYER_COMMAND_ID,
     appId: MUSIC_APP_ID,
     title: "芬达音乐",
-    keywords: ["music", "player", "播放器", "音乐", "打开播放器", "芬达", "芬达音乐"],
+    // 侧栏按钮沿用 command.title 作显示名；搜索词单独补，不要把动作文案写进 title。
+    keywords: ["music", "player", "播放器", "音乐", "打开播放器", "芬达", "芬达音乐", "打开音乐标签", "标签"],
     icon: MusicTabIcon,
     shortcutHelpId: "music-open-player",
     sidebarAction: {

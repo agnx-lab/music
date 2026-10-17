@@ -1505,6 +1505,20 @@ async function readMusicHostStateDoc() {
     return null;
   }
 }
+function hostTracksJson(tracks) {
+  return JSON.stringify(tracks);
+}
+function sameStringList(left, right) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
 function isHostWriteCircuitOpen() {
   return Date.now() < hostWriteCircuitOpenUntil;
 }
@@ -1956,8 +1970,19 @@ async function persistSanitizedToHost(storage, doc) {
   if (isHostWriteCircuitOpen()) {
     return;
   }
+  const hostTracksDoc = toHostTracksPersistDoc(doc);
+  const nextJson = hostTracksJson(hostTracksDoc.state.tracks);
+  if (nextJson === lastHostTracksJson) {
+    return;
+  }
   try {
-    await storage.writeJson(getMusicRuntimeAppId(), STATE_KEY, toHostTracksPersistDoc(doc));
+    const written = await storage.writeJson(
+      getMusicRuntimeAppId(),
+      STATE_KEY,
+      hostTracksDoc
+    );
+    lastHostTracksJson = nextJson;
+    void written;
   } catch (error) {
     openHostWriteCircuit(error);
   }
@@ -1976,6 +2001,9 @@ function applyHostTracksToStore(tracks) {
     nowPlayingId = tracks[0]?.id ?? null;
   }
   const queueIds = state.queueIds.filter((id) => trackIds.has(id));
+  if (nowPlayingId === state.nowPlayingId && sameStringList(queueIds, state.queueIds) && hostTracksJson(tracks) === hostTracksJson(state.tracks)) {
+    return;
+  }
   useMusicDemoStore.setState({ tracks, nowPlayingId, queueIds });
 }
 async function mergeMusicTracksFromHostStorage() {
@@ -2058,6 +2086,7 @@ function bindMusicHostStorage(storage, sync, config) {
     playbackRuntime.applyMusicPlaybackSessionSnapshotAfterHydrate();
   })().finally(() => {
     hostHydrationCompleted = true;
+    lastHostTracksJson = hostTracksJson(useMusicDemoStore.getState().tracks);
     notifyMusicHostHydrationListeners();
   });
 }
@@ -2135,7 +2164,7 @@ function listTracksAsWorkspaceItems(query = "") {
     return haystack.includes(normalized);
   });
 }
-var import_async_storage2, import_zustand, import_middleware, SEARCH_SCOPES, PERSIST_NAME, STATE_KEY, MAX_SEARCH_HISTORY, boundStorage, boundConfig, boundSync, syncUnsubscribe, playbackFocusUnsubscribe, configUnsubscribe, hostHydrationCompleted, hostHydrationListeners, HOST_WRITE_CIRCUIT_COOLDOWN_MS, hostWriteCircuitOpenUntil, hostWriteFailLoggedAt, hostWriteChain, configPersistTimer, MUSIC_MAX_VOLUME, COLLECTION_KINDS, PLAY_MODE_ORDER, hostBackedStorage, useMusicDemoStore;
+var import_async_storage2, import_zustand, import_middleware, SEARCH_SCOPES, PERSIST_NAME, STATE_KEY, MAX_SEARCH_HISTORY, boundStorage, boundConfig, boundSync, syncUnsubscribe, playbackFocusUnsubscribe, configUnsubscribe, hostHydrationCompleted, hostHydrationListeners, HOST_WRITE_CIRCUIT_COOLDOWN_MS, hostWriteCircuitOpenUntil, hostWriteFailLoggedAt, hostWriteChain, lastHostTracksJson, configPersistTimer, MUSIC_MAX_VOLUME, COLLECTION_KINDS, PLAY_MODE_ORDER, hostBackedStorage, useMusicDemoStore;
 var init_store = __esm({
   "src/store.ts"() {
     import_async_storage2 = __toESM(require("@react-native-async-storage/async-storage"));
@@ -2167,6 +2196,7 @@ var init_store = __esm({
     hostWriteCircuitOpenUntil = 0;
     hostWriteFailLoggedAt = 0;
     hostWriteChain = Promise.resolve();
+    lastHostTracksJson = null;
     configPersistTimer = null;
     MUSIC_MAX_VOLUME = 2;
     COLLECTION_KINDS = ["artist", "album", "playlist"];
@@ -2226,11 +2256,21 @@ var init_store = __esm({
         if (isHostWriteCircuitOpen()) {
           return;
         }
+        const hostTracksDocPreview = toHostTracksPersistDoc(docToWrite);
+        const previewTracksJson = hostTracksJson(hostTracksDocPreview.state.tracks);
+        if (previewTracksJson === lastHostTracksJson) {
+          return;
+        }
         await enqueueHostWrite(async () => {
           if (!boundStorage || isHostWriteCircuitOpen()) {
             return;
           }
           try {
+            const hostTracksDoc = toHostTracksPersistDoc(docToWrite);
+            const nextJson = hostTracksJson(hostTracksDoc.state.tracks);
+            if (nextJson === lastHostTracksJson) {
+              return;
+            }
             const existingHost = await readMusicHostStateDoc();
             const existingSanitized = sanitizeMusicPersistDoc(existingHost);
             const existingCount = existingSanitized?.state.tracks.length ?? 0;
@@ -2242,8 +2282,20 @@ var init_store = __esm({
               void mergeMusicTracksFromHostStorage();
               return;
             }
-            const hostTracksDoc = toHostTracksPersistDoc(docToWrite);
-            await boundStorage.writeJson(getMusicRuntimeAppId(), STATE_KEY, hostTracksDoc);
+            const existingJson = existingSanitized ? hostTracksJson(existingSanitized.state.tracks) : null;
+            if (existingJson === nextJson) {
+              lastHostTracksJson = nextJson;
+              return;
+            }
+            const written = await boundStorage.writeJson(
+              getMusicRuntimeAppId(),
+              STATE_KEY,
+              hostTracksDoc
+            );
+            lastHostTracksJson = nextJson;
+            if (!written) {
+              return;
+            }
             boundSync?.publish({
               appId: getMusicRuntimeAppId(),
               channel: STATE_KEY,
@@ -2267,6 +2319,7 @@ var init_store = __esm({
             state: { tracks: [] },
             version: 6
           });
+          lastHostTracksJson = hostTracksJson([]);
         } catch (error) {
           openHostWriteCircuit(error);
         }
@@ -13559,6 +13612,45 @@ var MUSIC_PLAYER_EXTRA_SHORTCUTS = [
     helpKeys: ["alt", "x"]
   }
 ];
+var MUSIC_NAVIGATION_SHORTCUTS = [
+  { helpId: "sidebar-wechat-view-music", label: "\u4FA7\u8FB9\u680F\u5207\u6362\u5230\u97F3\u4E50" },
+  { helpId: "music-open-player", label: "\u6253\u5F00\u97F3\u4E50\u6807\u7B7E" }
+];
+var MUSIC_DETAIL_SHEET_PRODUCT_SHORTCUTS = [
+  ...MUSIC_PLAYER_SHORTCUT_SLOTS.filter(
+    (slot) => slot.id !== "action:pin" && slot.id !== "action:addPlaylist"
+  ).map((slot) => ({
+    helpId: `transient:music:${slot.id}`,
+    label: slot.label
+  })),
+  ...MUSIC_NAVIGATION_SHORTCUTS
+];
+function listMusicDetailManagedShortcutSourceKeys() {
+  const keys = [];
+  for (const slot of MUSIC_PLAYER_SHORTCUT_SLOTS) {
+    keys.push(`transient:music:${slot.id}`);
+  }
+  for (const slot of MUSIC_PLAYER_EXTRA_SHORTCUTS) {
+    keys.push(`music:${slot.id}`);
+  }
+  for (const nav of MUSIC_NAVIGATION_SHORTCUTS) {
+    keys.push(nav.helpId);
+  }
+  return keys;
+}
+var MUSIC_DETAIL_SHORTCUT_GROUP = {
+  groupId: "music-shortcuts",
+  groupTitle: "\u5FEB\u6377\u952E"
+};
+function buildMusicPlayerDetailShortcutExtraRows() {
+  return MUSIC_DETAIL_SHEET_PRODUCT_SHORTCUTS.map((entry) => ({
+    label: entry.label,
+    value: "",
+    groupId: MUSIC_DETAIL_SHORTCUT_GROUP.groupId,
+    groupTitle: MUSIC_DETAIL_SHORTCUT_GROUP.groupTitle,
+    shortcutHelpId: entry.helpId
+  }));
+}
 var handlers = /* @__PURE__ */ new Map();
 var surfaceActive = false;
 function setMusicPlayerShortcutHandlers(next) {
@@ -13587,7 +13679,8 @@ function registerMusicPlayerShortcuts(host2) {
     appId: MUSIC_APP_ID,
     groupKey: "music",
     title: "\u97F3\u4E50",
-    kind: "product"
+    kind: "product",
+    detailManagedShortcutSourceKeys: listMusicDetailManagedShortcutSourceKeys()
   });
   for (const slot of MUSIC_PLAYER_SHORTCUT_SLOTS) {
     const contributionId = `transient-music-${sanitizeContributionId(slot.id)}`;
@@ -18630,7 +18723,7 @@ function registerMusicApp(nextHost) {
     appId: MUSIC_APP_ID,
     actionId: "workspace.app.view.music",
     helpId: "sidebar-wechat-view-music",
-    label: "\u5207\u6362\u5230\u97F3\u4E50\u4E3B\u89C6\u56FE",
+    label: "\u4FA7\u8FB9\u680F\u5207\u6362\u5230\u97F3\u4E50",
     sectionId: "music",
     sectionTitle: "\u97F3\u4E50",
     macCombo: "Cmd+6",
@@ -18735,7 +18828,8 @@ function registerMusicApp(nextHost) {
               store().setLyricsDensity(next === "relaxed" ? "relaxed" : "compact");
             }
           }
-        }
+        },
+        ...buildMusicPlayerDetailShortcutExtraRows()
       ];
     }
   });
@@ -18774,7 +18868,8 @@ function registerMusicApp(nextHost) {
     id: MUSIC_OPEN_PLAYER_COMMAND_ID,
     appId: MUSIC_APP_ID,
     title: "\u82AC\u8FBE\u97F3\u4E50",
-    keywords: ["music", "player", "\u64AD\u653E\u5668", "\u97F3\u4E50", "\u6253\u5F00\u64AD\u653E\u5668", "\u82AC\u8FBE", "\u82AC\u8FBE\u97F3\u4E50"],
+    // 侧栏按钮沿用 command.title 作显示名；搜索词单独补，不要把动作文案写进 title。
+    keywords: ["music", "player", "\u64AD\u653E\u5668", "\u97F3\u4E50", "\u6253\u5F00\u64AD\u653E\u5668", "\u82AC\u8FBE", "\u82AC\u8FBE\u97F3\u4E50", "\u6253\u5F00\u97F3\u4E50\u6807\u7B7E", "\u6807\u7B7E"],
     icon: MusicTabIcon,
     shortcutHelpId: "music-open-player",
     sidebarAction: {
