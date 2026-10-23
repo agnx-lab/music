@@ -1,5 +1,5 @@
 // 场景：Music 把当前曲封面推到宿主中间区内容背景 — 不依赖播放器 Tab 是否挂载。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import { resolveMusicCoverBackdropImageUri } from "./resolve-cover-backdrop-uri";
 import { useMusicDemoStore } from "./store";

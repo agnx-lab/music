@@ -3820,7 +3820,7 @@ var import_react11 = require("react");
 var import_react_native9 = require("react-native");
 var import_lucide_react_native8 = require("lucide-react-native");
 var import_react_native_unistyles7 = require("react-native-unistyles");
-var import_app_sdk = require("@getagnx/app-sdk");
+var import_app_sdk = require("@agnx-lab/app-sdk");
 init_music_ids();
 
 // src/list-contributions.ts

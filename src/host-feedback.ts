@@ -1,5 +1,5 @@
 // 场景：Music Sub App 复用宿主 progress / notification，避免自造全局反馈层。
-import type { WorkspaceAppHostApi, WorkspaceAppNotificationKind } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi, WorkspaceAppNotificationKind } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import { tryGetMusicHostApi } from "./music-host";
 

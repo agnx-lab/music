@@ -1,5 +1,5 @@
-// 场景：音乐播放器快捷键 — activate 时稳定注册（Settings 可 Rebind）；播放器只挂 run / surface。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+// 场景：音乐播放器快捷键 — activate 时稳定注册；product 键进 Tab 详情 Rebind，Settings 不再堆列表。
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 
 export type MusicPlayerShortcutId =
@@ -160,6 +160,69 @@ export const MUSIC_PLAYER_EXTRA_SHORTCUTS: readonly {
   },
 ];
 
+/** 导航入口：全局可触达，一并迁入 Tab 详情「快捷键」，避免 Settings 残留「音乐」大分区。 */
+export const MUSIC_NAVIGATION_SHORTCUTS: readonly {
+  helpId: string;
+  label: string;
+}[] = [
+  { helpId: "sidebar-wechat-view-music", label: "侧边栏切换到音乐" },
+  { helpId: "music-open-player", label: "打开音乐标签" },
+];
+
+/**
+ * Tab 详情「快捷键」展示的 product 键（不含曲目菜单已走编辑布局的项）。
+ * pin / addPlaylist / extras 与曲目菜单同源，仍由 layoutManaged + 编辑布局 Rebind。
+ */
+export const MUSIC_DETAIL_SHEET_PRODUCT_SHORTCUTS: readonly {
+  helpId: string;
+  label: string;
+}[] = [
+  ...MUSIC_PLAYER_SHORTCUT_SLOTS.filter(
+    (slot) => slot.id !== "action:pin" && slot.id !== "action:addPlaylist",
+  ).map((slot) => ({
+    helpId: `transient:music:${slot.id}`,
+    label: slot.label,
+  })),
+  ...MUSIC_NAVIGATION_SHORTCUTS,
+];
+
+/** Settings 剔除用：全部 music product + 导航 helpId（曲目菜单键亦列入，幂等）。 */
+export function listMusicDetailManagedShortcutSourceKeys(): readonly string[] {
+  const keys: string[] = [];
+  for (const slot of MUSIC_PLAYER_SHORTCUT_SLOTS) {
+    keys.push(`transient:music:${slot.id}`);
+  }
+  for (const slot of MUSIC_PLAYER_EXTRA_SHORTCUTS) {
+    keys.push(`music:${slot.id}`);
+  }
+  for (const nav of MUSIC_NAVIGATION_SHORTCUTS) {
+    keys.push(nav.helpId);
+  }
+  return keys;
+}
+
+const MUSIC_DETAIL_SHORTCUT_GROUP = {
+  groupId: "music-shortcuts",
+  groupTitle: "快捷键",
+} as const;
+
+/** 供 registerDetailSheetExtras(surface=config) 追加「快捷键」分组行。 */
+export function buildMusicPlayerDetailShortcutExtraRows(): ReadonlyArray<{
+  label: string;
+  value: string;
+  groupId: string;
+  groupTitle: string;
+  shortcutHelpId: string;
+}> {
+  return MUSIC_DETAIL_SHEET_PRODUCT_SHORTCUTS.map((entry) => ({
+    label: entry.label,
+    value: "",
+    groupId: MUSIC_DETAIL_SHORTCUT_GROUP.groupId,
+    groupTitle: MUSIC_DETAIL_SHORTCUT_GROUP.groupTitle,
+    shortcutHelpId: entry.helpId,
+  }));
+}
+
 const handlers = new Map<MusicPlayerShortcutId, () => void>();
 let surfaceActive = false;
 
@@ -214,6 +277,7 @@ export function registerMusicPlayerShortcuts(host: WorkspaceAppHostApi): void {
     groupKey: "music",
     title: "音乐",
     kind: "product",
+    detailManagedShortcutSourceKeys: listMusicDetailManagedShortcutSourceKeys(),
   });
   for (const slot of MUSIC_PLAYER_SHORTCUT_SLOTS) {
     const contributionId = `transient-music-${sanitizeContributionId(slot.id)}`;

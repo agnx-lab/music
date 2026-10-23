@@ -1,6 +1,6 @@
 // 场景：Music 曲目实体菜单多表面 — 同源 track-menu，player/queue 布局走宿主 entity-menu 键。
 import { useCallback, useSyncExternalStore } from "react";
-import type { WorkspaceAppActionBarLayout, WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppActionBarLayout, WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import {
   getDefaultMusicPlayerActionLayout,

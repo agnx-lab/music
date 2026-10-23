@@ -13,7 +13,7 @@ import {
   Share2,
   Trash2,
 } from "lucide-react-native";
-import type { WorkspaceAppIcon, WorkspaceAppMenuItem } from "@getagnx/app-sdk";
+import type { WorkspaceAppIcon, WorkspaceAppMenuItem } from "@agnx-lab/app-sdk";
 
 /**
  * 侧栏右键（= 三点第二段）曲目操作，不含「播放」（点行即播）。

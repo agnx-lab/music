@@ -1,5 +1,5 @@
 // 场景：跨端「音频焦点」— 播放态各端本地；另一端开始播时仅通知本端静音，不同步曲目/进度。
-import type { WorkspaceAppHostApi, WorkspaceAppSyncApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi, WorkspaceAppSyncApi } from "@agnx-lab/app-sdk";
 
 export const MUSIC_PLAYBACK_FOCUS_CHANNEL = "music-playback-focus";
 

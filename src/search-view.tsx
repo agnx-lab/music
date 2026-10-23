@@ -57,7 +57,7 @@ import {
   enrichSearchHitCoversFromLibrary,
 } from "./store";
 import { getMusicHostApi, tryGetMusicHostApi } from "./music-host";
-import type { WorkspaceAppActionBarProps, WorkspaceAppActionContribution } from "@getagnx/app-sdk";
+import type { WorkspaceAppActionBarProps, WorkspaceAppActionContribution } from "@agnx-lab/app-sdk";
 import {
   MUSIC_SEARCH_COLLECTION_MENU_ID,
   MUSIC_SEARCH_HIT_MENU_ID,

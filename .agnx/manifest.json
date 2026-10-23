@@ -44,5 +44,6 @@
         "title": "播放器"
       }
     ]
-  }
+  },
+  "icon": "./.agnx/icon.svg"
 }

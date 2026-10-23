@@ -1,6 +1,6 @@
 // 场景：播放器底栏曲目操作布局 — 与 track-menu 菜单项同源；布局与侧栏 item-menu 独立持久化。
 // 搜索/音量为固定铬层，不进本表。曲目「详情」已并入 Tab 公共详情，不进 bar/overflow。
-import type { WorkspaceAppActionBarLayout } from "@getagnx/app-sdk";
+import type { WorkspaceAppActionBarLayout } from "@agnx-lab/app-sdk";
 import {
   MUSIC_SIDEBAR_TRACK_MENU_IDS,
   MUSIC_TRACK_MENU_ACTION_LABELS,

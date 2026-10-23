@@ -1,5 +1,5 @@
 // 场景：Music Sub App 宿主 API 单点存取，避免 player ↔ search 互相 import 成环。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 
 let hostApi: WorkspaceAppHostApi | null = null;
 

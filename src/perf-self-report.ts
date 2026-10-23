@@ -1,5 +1,5 @@
 // 场景：Music 性能自报 — Tab 可见且播放中时写 host.storage perf-self-report-v1。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import { tryGetMusicHostApi } from "./music-host";
 import { useMusicDemoStore } from "./store";

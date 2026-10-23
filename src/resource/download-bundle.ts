@@ -1,5 +1,5 @@
 // 场景：把可播直链 / 封面 / 歌词真实下载到 apps/data，写入曲目与 download-bundle 清单。
-import type { WorkspaceAppHostApi, WorkspaceAppManagedFile } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi, WorkspaceAppManagedFile } from "@agnx-lab/app-sdk";
 import { runWithMusicHostTask } from "../host-feedback";
 import { ensureTrackAtmospherePalette } from "../extract-cover-atmosphere";
 import { MUSIC_APP_ID } from "../music-ids";

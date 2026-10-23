@@ -1,5 +1,5 @@
 // 场景：曲目导出 ZIP / 物理删除三件套 + 侧栏删除同语义。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "../music-ids";
 import { useMusicDemoStore, type DemoTrack } from "../store";
 import {

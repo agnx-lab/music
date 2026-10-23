@@ -50,8 +50,8 @@ import type {
   WorkspaceAppHostApi,
   WorkspaceAppMenuItem,
   WorkspaceAppRunContext,
-} from "@getagnx/app-sdk";
-import { projectActionBarOverflowFold } from "@getagnx/app-sdk";
+} from "@agnx-lab/app-sdk";
+import { projectActionBarOverflowFold } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import {
   MUSIC_OPEN_PLAYER_COMMAND_ID,

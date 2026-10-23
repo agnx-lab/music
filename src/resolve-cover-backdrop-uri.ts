@@ -1,5 +1,5 @@
 // 场景：Music 封面 → 宿主 Image 可用 URI（优先可持久化 http/data）。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { coverUrlForHero } from "./cover-url-quality";
 
 function isDirectImageUri(uri: string): boolean {

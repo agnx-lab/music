@@ -1,6 +1,6 @@
 // 场景：Music 搜索结果行/合集卡片菜单 — 同源动作表 + 宿主 entity-menu 布局；UI 整机走 host.ui.ActionBar。
 import { useCallback, useSyncExternalStore } from "react";
-import type { WorkspaceAppActionBarLayout, WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppActionBarLayout, WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import { getMusicHostApi } from "./music-host";
 import {

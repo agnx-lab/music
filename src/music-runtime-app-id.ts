@@ -1,5 +1,5 @@
 // 场景：P4 短 appId 迁移 — 注册/存储用宿主注入的 scan appId，packaged 为 music、同捆仍为 legacy。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID, MUSIC_LEGACY_APP_ID } from "./music-ids";
 
 let runtimeAppId = MUSIC_APP_ID;

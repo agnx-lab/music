@@ -1,5 +1,5 @@
 // 场景：Agent「按关键词播歌」— 本地曲库优先，未命中则在线搜索→落盘→播放。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { downloadAndPersistTrackBundle } from "./resource/download-bundle";
 import { searchPlayableMusic } from "./resource/service";
 import type { SearchHitTrack } from "./resource/types";

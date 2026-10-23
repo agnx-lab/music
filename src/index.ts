@@ -1,5 +1,5 @@
 // 场景：com.example.music 入口 — 宿主按 manifest.main / 包名 import 后调用 activate(host)。
-import type { WorkspaceAppHostApi, WorkspaceAppModule } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi, WorkspaceAppModule } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import { bindMusicRuntimeAppIdFromHost } from "./music-runtime-app-id";
 import { setMusicPlaybackBackgroundActive, stopMusicPlaybackAudio } from "./playback-engine";

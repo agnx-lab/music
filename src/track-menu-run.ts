@@ -1,6 +1,6 @@
 // 场景：曲目菜单执行 — 侧栏右键与播放器三点必须走同一套语义，禁止各写一份 switch。
 /* oxlint-disable eslint(complexity) -- 菜单 action 全集中在一处 switch */
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { deleteMusicTrackCompletely, exportMusicTrackZip } from "./resource/track-files";
 import { refreshTrackResourcesAndMaybePersist } from "./resource/refresh-resources";
 import { requestTrackAutoPlay } from "./music-autoplay";

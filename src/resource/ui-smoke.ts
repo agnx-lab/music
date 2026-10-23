@@ -1,5 +1,5 @@
 // 场景：在真实宿主里跑搜索→点播落盘冒烟（写 storage 请求/结果，供 Agent 无人值守验收）。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "../music-ids";
 import { useMusicDemoStore } from "../store";
 import { downloadAndPersistTrackBundle } from "./download-bundle";

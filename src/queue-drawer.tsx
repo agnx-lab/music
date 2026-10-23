@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { GripVertical, ListMusic } from "lucide-react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import type { WorkspaceAppActionBarProps, WorkspaceAppActionContribution } from "@getagnx/app-sdk";
+import type { WorkspaceAppActionBarProps, WorkspaceAppActionContribution } from "@agnx-lab/app-sdk";
 import { getMusicHostApi } from "./music-host";
 import type { DemoTrack } from "./store";
 import { resolveQueueScrollOffset } from "./queue-scroll";

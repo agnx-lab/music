@@ -10,7 +10,7 @@ import type {
   WorkspaceAppStorageApi,
   WorkspaceAppSyncApi,
   WorkspaceAppSyncEvent,
-} from "@getagnx/app-sdk";
+} from "@agnx-lab/app-sdk";
 import { getMusicLegacyStorageAppId, getMusicRuntimeAppId } from "./music-runtime-app-id";
 import {
   MUSIC_PLAYBACK_FOCUS_CHANNEL,

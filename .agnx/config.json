@@ -1,0 +1,9 @@
+{
+  "appId": "music",
+  "installState": "installed",
+  "launchMode": "packaged",
+  "source": {
+    "kind": "local"
+  },
+  "updatedAt": "2026-09-19T02:45:17.202Z"
+}

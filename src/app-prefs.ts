@@ -1,6 +1,6 @@
 // 场景：Music 低频偏好 — 本端 AsyncStorage 适配器（详情开关不写 host.config）。
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { WorkspaceAppConfigApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppConfigApi } from "@agnx-lab/app-sdk";
 import {
   getDefaultSearchProviderSelection,
   normalizeSearchProviderSelection,

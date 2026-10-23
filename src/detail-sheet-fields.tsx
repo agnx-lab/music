@@ -13,7 +13,7 @@ import {
   type LayoutChangeEvent,
 } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { useMusicDemoStore } from "./store";
 
 async function copyTextToClipboard(text: string): Promise<void> {

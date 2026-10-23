@@ -1,5 +1,5 @@
 // 场景：从同一远程源重新拉取当前曲的音源 / 封面 / 歌词，并强制落盘到本地库。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { type DemoTrack, useMusicDemoStore } from "../store";
 import {
   downloadAndPersistTrackBundle,

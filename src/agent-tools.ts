@@ -1,5 +1,5 @@
 // 场景：Music Sub App 向 Agent 暴露曲库/队列/播放控制与搜索工具（Context VFS P6+）。
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { MUSIC_APP_ID } from "./music-ids";
 import { findBestLocalTrack, playMusicByQuery } from "./agent-play-query";
 import { getMusicPlaybackAudio } from "./playback-engine";

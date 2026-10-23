@@ -4,7 +4,7 @@ import type {
   WorkspaceAppDetailSheetExtraRow,
   WorkspaceAppDetailSheetExtrasContext,
   WorkspaceAppHostApi,
-} from "@getagnx/app-sdk";
+} from "@agnx-lab/app-sdk";
 import { MusicAtmosphereDetailField } from "./detail-sheet-fields";
 import { MUSIC_APP_ID } from "./music-ids";
 import {

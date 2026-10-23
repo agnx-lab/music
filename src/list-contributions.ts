@@ -1,6 +1,6 @@
 // 场景：Music 列表面贡献 — 经 activate(host) 注册。
 import { Music2 } from "lucide-react-native";
-import type { WorkspaceAppHostApi } from "@getagnx/app-sdk";
+import type { WorkspaceAppHostApi } from "@agnx-lab/app-sdk";
 import { getMusicRuntimeAppId } from "./music-runtime-app-id";
 import { MUSIC_APP_ID, MUSIC_LEGACY_APP_ID } from "./music-ids";
 import { listTracksAsWorkspaceItems, useMusicDemoStore } from "./store";
